@@ -3,9 +3,7 @@ import { PromiseResult }          from 'aws-sdk/lib/request';
 import { Credentials }            from 'aws-sdk';
 import * as SecretsManager        from 'aws-sdk/clients/secretsmanager';
 import { GetSecretValueResponse } from 'aws-sdk/clients/secretsmanager';
-import { Settings }               from './Settings';
-
-import * as Crypto from 'crypto';
+import { Utils }                  from './Utils';
 
 /**
  * Adds a 
@@ -73,13 +71,45 @@ export class Secrets {
   private secretsManager:SecretsManager;
   private secretBundles:Map<String,SecretBundle>;
 
-  constructor(settiongs:Settings, credentials:Credentials){
+  constructor(credentials:Credentials,region?:string){
     this.secretsManager = new SecretsManager({
       apiVersion: '2017-10-17',
-      region: settiongs.get('--aws-region','-r',undefined),
+      region: region,
       credentials: credentials
     });
     this.secretBundles = new Map();
+  }
+
+  public updateSecrets(configuration:any):Promise<any> {
+    const promises:Array<Promise<void>> = [];
+    Utils.traverse(
+      configuration,
+      (toTraverse:any, key:string, value:any) => {
+        
+        if(Array.isArray(value)){
+            value.map( (value,index) => {
+              if(this.needsSecret(value)) {
+                promises.push(
+                  Promise.resolve(this.getSecretParts(value))
+                    .then( (secretParts:any) => this.lookupSecret(secretParts.bundleName, secretParts.secretName) )
+                    .then( (secretValue:string) => { toTraverse[key][index] = secretValue } )
+                )
+              }
+            });
+
+        } else {
+          if(this.needsSecret(value)) {
+            promises.push(
+              Promise.resolve(this.getSecretParts(value))
+                .then( (secretParts:any) => this.lookupSecret(secretParts.bundleName, secretParts.secretName) )
+                .then( (secretValue:string) => { toTraverse[key] = secretValue } )
+            )
+          }
+        }        
+      }
+    );
+    return Promise.all(promises)
+      .then( () => configuration )
   }
 
   /**
@@ -87,15 +117,15 @@ export class Secrets {
    * 
    * @param value to test if a secret is needed.
    */
-  public needsSecret(value:string):boolean {
-    return value != undefined && value!=null && typeof(value)==='string' && value.indexOf('secret:')===0 && value.split(':').length === 3;
+  private needsSecret(value:string):boolean {
+    return value != undefined && value!=null && typeof(value)==='string' && value.indexOf('secretmanager:')===0 && value.split(':').length === 3;
   }
 
   /**
    * 
    * @param 
    */
-  public getSecretParts(value:string):any{
+  private getSecretParts(value:string):any{
     const secretParts:Array<string> = value.split(':');
 
     return {
@@ -111,7 +141,7 @@ export class Secrets {
    * @param bundleName name of the secret budnle.
    * @param secretName name of the json attribute to load.
    */
-  public lookupSecret(bundleName:string,secretName:string):Promise<string> {
+  private lookupSecret(bundleName:string,secretName:string):Promise<string> {
     const bundle:SecretBundle = this.getBundle(bundleName);
     return bundle.getSecretValue(secretName);
   }

@@ -1,0 +1,42 @@
+{
+  "name": "auth0-deploy-cli-config-values",
+  "version": "1.0.4",
+  "description": "Reads the configuration file for auth0-deploy-cli and replaces values found in AWS Secret Manager.",
+  "main": "dist/index.js",
+  "bin": {
+    "a0deploy-config-values": "bin/index"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "files": [
+    "dist/**/*",
+    "bin/index"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matt-filion/auth0-deploy-cli-config-values.git"
+  },
+  "author": "matt.filion@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matt-filion/auth0-deploy-cli-config-values/issues"
+  },
+  "keywords": [
+    "auth0",
+    "auth0-cli-deploy",
+    "secrets",
+    "AWS Secret Manager"
+  ],
+  "homepage": "https://github.com/matt-filion/auth0-deploy-cli-config-values#readme",
+  "devDependencies": {
+    "@types/node": "^10.12.12",
+    "typescript": "^3.2.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.371.0"
+  }
+}

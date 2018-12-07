@@ -1,6 +1,6 @@
 {
   "name": "auth0-deploy-cli-config-values",
-  "version": "1.0.6",
+  "version": "1.0.10",
   "description": "Reads the configuration file for auth0-deploy-cli and replaces values found in AWS Secret Manager.",
   "main": "dist/index.js",
   "bin": {

@@ -31,17 +31,17 @@ class SecretBundle {
       .then( () => {
         try {
 
-          if(this.secrets === undefined) throw Error(`The Secret value for ${this.secretsName} is undefined or null.`);
+          if(this.secrets === undefined) return Promise.reject(`The Secret value for ${this.secretsName} is undefined or null.`);
 
           const secrets:any = JSON.parse(this.secrets);
           const value:any   = secrets[name];
 
-          if(!value) throw Error(`There was no value found for secret:${this.secretsName}:${name}`);
+          if(!value) return Promise.reject(`There was no value found for secret: ${this.secretsName}:${name}`);
 
           return value;
 
         } catch (error) {
-          throw Error(`The secret bundle ${this.secretsName} is not in a JSON form, or has invalid JSON and could not be parsed.`);
+          return Promise.reject(`The secret bundle ${this.secretsName} is not in a JSON form, or has invalid JSON and could not be parsed.`);
 
         }
       })

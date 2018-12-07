@@ -15,12 +15,12 @@ const rootCommand  = Object.keys(packageConfig.bin)[0];
 
 /* Used to coerce file names provided to the buffer that represents the file. */
 const coerceToFile = (filePath:string) => {
-  const resolvedFilePath = filePath.startsWith('.') ? path.join(__dirname, filePath) : filePath;
+  const resolvedFilePath = filePath.startsWith('.') ? path.join('.', filePath) : filePath;
   if(fs.existsSync(resolvedFilePath)){
-    console.log(`Progress: Reading the input file,${resolvedFilePath}`);
+    console.log(`Progress: Reading the input file, ${resolvedFilePath}`);
     return fs.readFileSync(resolvedFilePath);
   } else {
-    throw `The file could not be found, ${filePath}/${resolvedFilePath}.`;
+    throw `The file could not be found, ${filePath} [${resolvedFilePath}].`;
   }
 }
 
@@ -43,10 +43,16 @@ program
 
 /* Validate input */
 let invalid:boolean = false;
-if(!program.config) invalid = true; console.log('The --config parameter is required and must point to a valid file. You can use relative paths from the exection location.');
-if(!program.output) invalid = true; console.log('The --output parameter is required.');
+if(!program.config) {
+  invalid = true; 
+  console.log('The --config parameter is required and must point to a valid file. You can use relative paths from the exection location.');
+}
+if(!program.output) {
+  invalid = true; 
+  console.log('The --output parameter is required.');
+}
 
-if(!invalid) {
+if(invalid==false) {
   /**
    * Load the confiugration file into a usable structure that will be used
    * to feed the values as pattern replacement is executed on the file.
@@ -66,10 +72,14 @@ if(!invalid) {
     .then( upatedConfiguration => {
       
       const outputFile         = program.output;
-      const resolvedOutputPath = outputFile.startsWith('.') ? path.join(__dirname, outputFile) : outputFile;
+      const resolvedOutputPath = outputFile.startsWith('.') ? path.join('.', outputFile) : outputFile;
       
-      console.log(`Progress: Writing output file.`);
+      console.log(`Progress: Writing output file ${resolvedOutputPath}.`);
 
-      fs.writeFileSync(resolvedOutputPath,JSON.stringify(upatedConfiguration,null,4))
+      fs.writeFileSync(resolvedOutputPath,JSON.stringify(upatedConfiguration,null,4));
+
+    })
+    .catch( error => {
+      console.error("Problem while trying to resolve a secret.",error);
     })
 }

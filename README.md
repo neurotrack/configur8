@@ -49,12 +49,13 @@ For instance, if you have a secret file called /dev/auth0Secrets and its content
 ```
 
 # Permissions
+```
 -  Effect: "Allow"
        Action:
           - "secretsmanager:DescribeSecret"
           - "secretsmanager:GetSecretValue"
        Resource:
-          - arn:aws:secretsmanager:#{AWS::Region}:#{AWS::AccountId}:secret:/${self:provider.stage}/users*
-
+          - arn:aws:secretsmanager:{AWS::Region}:{AWS::AccountId}:secret:/path/to/secret*
+```
 # CLI Arguments
 Use --help to get a complete list of commands.

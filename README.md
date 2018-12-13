@@ -1,9 +1,6 @@
 # Summary
 Inject values into your structured text doc from remote or CLI sources.
 
-# Cascading Lookup
-By providing multiple lookups 
-
 # Value Lookup
 Below is a list of prefixes you can use to indicate the location of the value to be looked up. WHen any of these value syntaxes are found as a value, then it will replace the entirety of the value when its located and if not located, it will be removed from the document.
 
@@ -16,9 +13,6 @@ In all cases where parenthesis are omitted, the value foudn will replace the val
 
 For example `(cli:FOO_TOO) Or Some Other Default`, where FOO_TOO = Genius will resolve to `Genius Or Some Other Default`. Can be useful when needing a reference, within another lookup pattern, or where values simply need to be augmented not replaced.
 
-# Fail If Not Found
-???
-
 # Examples
 
 ```
@@ -26,9 +20,9 @@ tenant:
   environment: qa
   friendly_name: cli:ARG_NAME SOME_DEFAULT
   label: cli:ARG_NAME SOME_DEFAULT
-  secret: secretmanager:/(dev)/auth0:SECRET_NAME,cli:SECRET_NAME
-  key: cli:ARG_NAME Some other default.
-  id: aws-parameterstore:/dev/ Yep, another default that is fine.
+  secret: secretmanager:/(dev)/auth0:SECRET_NAME
+  key: (cli:ARG_NAME) Some other default.
+  id: aws-parameterstore:/dev/
 ```
 
 # Usage

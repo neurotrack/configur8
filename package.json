@@ -1,10 +1,10 @@
 {
-  "name": "auth0-deploy-cli-config-values",
-  "version": "1.0.10",
-  "description": "Reads the configuration file for auth0-deploy-cli and replaces values found in AWS Secret Manager.",
+  "name": "structured-doc-vars",
+  "version": "1.0.0",
+  "description": "Inject values into your structured text doc from remote or CLI sources.",
   "main": "dist/index.js",
   "bin": {
-    "a0deploy-config": "bin/index"
+    "doc-vars": "bin/index"
   },
   "scripts": {
     "build": "tsc",
@@ -18,26 +18,33 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/matt-filion/auth0-deploy-cli-config-values.git"
+    "url": "git+https://github.com/matt-filion/structured-doc-vars.git"
   },
   "author": "matt.filion@gmail.com",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/matt-filion/auth0-deploy-cli-config-values/issues"
+    "url": "https://github.com/matt-filion/structured-doc-vars/issues"
   },
   "keywords": [
-    "auth0",
-    "auth0-cli-deploy",
+    "yaml",
+    "JSON",
+    "variables",
+    "externalize",
     "secrets",
-    "AWS Secret Manager"
+    "parameters",
+    "AWS Secret Manager",
+    "AWS Parameter Store"
   ],
-  "homepage": "https://github.com/matt-filion/auth0-deploy-cli-config-values#readme",
+  "homepage": "https://github.com/matt-filion/structured-doc-vars#readme",
   "devDependencies": {
     "@types/node": "^10.12.12",
     "typescript": "^3.2.1"
   },
   "dependencies": {
+    "@types/js-yaml": "^3.11.2",
     "aws-sdk": "^2.371.0",
-    "commander": "^2.19.0"
+    "commander": "^2.19.0",
+    "js-yaml": "^3.12.0",
+    "yaml-js": "^0.2.3"
   }
 }

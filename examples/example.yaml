@@ -1,0 +1,10 @@
+top:
+  label: Hello "George"  # Useless but added for thoroughness of testing.
+  environment: cli:ENVIRONMENT "DEV"
+  secret: aws-secretmanager:/(cli:ENVIRONMENT)/test:HELLO
+  # clientId: aws-parameterstore:/(cli:ENVIRONMENT)/test/CLIENT
+  arrayValues:
+    # - aws-parameterstore:/(cli:ENVIRONMENT)/test/NONE,"A Constant"
+    - aws-secretmanager:/(cli:ENVIRONMENT)/test:NONE "Another Constant"
+    - aws-secretmanager:/(cli:ENVIRONMENT)/test:NONE
+    - aws-secretmanager:/(cli:ENVIRONMENT)/test:FOO

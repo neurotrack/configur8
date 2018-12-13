@@ -1,6 +1,35 @@
 # Summary
-Provides the ability to externalize the secure values of your auth0-cli-deploy configuration file to AWS Secret manager. This way they are not stored in source control where the value can be accidentally leaked.
+Inject values into your structured text doc from remote or CLI sources.
 
+# Cascading Lookup
+By providing multiple lookups 
+
+# Value Lookup
+Below is a list of prefixes you can use to indicate the location of the value to be looked up. WHen any of these value syntaxes are found as a value, then it will replace the entirety of the value when its located and if not located, it will be removed from the document.
+
+* `cli:NAME_TO_LOOKUP` Will look for a command line argument passed in with the name specified. `a0deploy-variables --config ./file.yaml --output ./file.dev.yaml --NAME_TO_LOOKUP HELLO`
+* `aws-secretmanager:/path/to/secret:VALUE_IN_SECRETS` This will lookup a secret bundle called `/path/to/secret` and within that bundle, it will look for a value called `VALUE_IN_SECRETS`. Currently this value must be a string.
+* `aws-parameterstore:/path/to/parameter` This will lookup a parameters called `/path/to/parameter` in AWS Parameter Storer. Currently this value must be a string.
+
+# Bounded replacement
+In all cases where parenthesis are omitted, the value foudn will replace the value the value lookup is within. If you specify braces around the value lookup pattern, then only that section is replaced.
+
+For example `(cli:FOO_TOO) Or Some Other Default`, where FOO_TOO = Genius will resolve to `Genius Or Some Other Default`. Can be useful when needing a reference, within another lookup pattern, or where values simply need to be augmented not replaced.
+
+# Fail If Not Found
+???
+
+# Examples
+
+```
+tenant:
+  environment: qa
+  friendly_name: cli:ARG_NAME SOME_DEFAULT
+  label: cli:ARG_NAME SOME_DEFAULT
+  secret: secretmanager:/(dev)/auth0:SECRET_NAME,cli:SECRET_NAME
+  key: cli:ARG_NAME Some other default.
+  id: aws-parameterstore:/dev/ Yep, another default that is fine.
+```
 
 # Usage
 1. Install `npm i -g auth0-deploy-cli-config-values aws-sdk`
@@ -8,45 +37,51 @@ Provides the ability to externalize the secure values of your auth0-cli-deploy c
 1. Update your configuration file for auth0 deploy CLI. Each value you want replaced must be in the format of secret:{aws secret manager path}:{key within secrets}. See more on this below.
 1. Execute auth0-deploy-cli-config-values to modify your configuration file, before it is used. `a0deploy-config --profile dev --config ./a0deploy.json --output ./a0deploy.dev.json --profile some-profile`.
 
-
-# Double Hash
-Before secrets are resolved, the file has all of its double hash values resolved. Within your secret values you can use double hash to distinguish which environment the configuration will be for. The below example shows you an example configuration file were the environment is used to choose a different secret bundle based on the environment.
-
-The logic will also respect nested values, so you can chain them as appropriate.
+# YAML Example
+Within your 'tenant' yaml file you can make reference to external configurations, such as all those client secrets and URL's. Its also possible to make some 
 
 ```
-{
-  "AUTH0_DOMAIN": "YOUR_DOMAIN.auth0.com",
-  "AUTH0_CLIENT_ID": "secretmanager:/##STAGE##/auth0Deploy:CLIENT_ID",
-  "AUTH0_CLIENT_SECRET": "secretmanager:/##STAGE##/auth0Deploy:CLIENT_ID",
-  "AUTH0_ALLOW_DELETE": true,
-  "AUTH0_KEYWORD_REPLACE_MAPPINGS": {
-    "ENVIRONMENT": "dev",
-    "STAGE": "##ENVIRONMENT##-PR102",
-    "APP1_SECRET": "secretmanager:/##STAGE##/app1:SUPER_SECRET",
-    "APP2_SECRET": "secretmanager:/##STAGE##/app2:SUPER_SECRET"
-  }
-}
+ - is_token_endpoint_ip_header_trusted: false
+    name: Example Web
+    is_first_party: true
+    oidc_conformant: true
+    sso_disabled: false
+    cross_origin_auth: false
+    description: ''
+    logo_uri: ''
+    sso: true
+    callbacks: 
+      - http://some-domain.com/index.html
+      - http://some-domain.com/index.html
+    allowed_logout_urls: []
+    allowed_clients: []
+    allowed_origins: 
+      - http://some-domain.com/index.html
+      - http://some-domain.com/index.html
+    client_secret: 
+    jwt_configuration:
+      alg: RS256
+      lifetime_in_seconds: 36000
+      secret_encoded: false
+    token_endpoint_auth_method: client_secret_post
+    app_type: regular_web
+    grant_types: @@CONSUMER_WEB_GRANT_TYPES@@
+    web_origins:
+      - http://some-domain.com
+      - http://some-domain.com.other
+    custom_login_page_on: true
+
+
 ```
 
-# AWS Secret Lookup
-Secrets will be added to values of the configurations by looking for `secretmanager:` at the begining of a value. Next, the AWS Secret to lookup will be determined between the two semi-colons. Next, the final value will be looked up in the secret file. If nothing is found, an exception is thrown.
 
-For instance, if you have a secret file called /dev/auth0Secrets and its contents are `{"FOO":"bar"}`. To inject this value into your configuraiton file you would specify secret:/dev/auth0Secrets:FOO. This functionallity respects the double hash notation of auth0-deploy-cli, see the **Double Hash** section for more details.
-```
-{
-  "AUTH0_DOMAIN": "YOUR_DOMAIN.auth0.com",
-  "AUTH0_CLIENT_ID": "secretmanager:/##STAGE##/auth0Deploy:CLIENT_ID",
-  "AUTH0_CLIENT_SECRET": "secretmanager:/##STAGE##/auth0Deploy:CLIENT_ID",
-  "AUTH0_ALLOW_DELETE": true,
-  "AUTH0_KEYWORD_REPLACE_MAPPINGS": {
-    "ENVIRONMENT": "dev",
-    "STAGE": "##ENVIRONMENT##-PR102",
-    "APP1_SECRET": "secretmanager:/##STAGE##/app1:SUPER_SECRET",
-    "APP2_SECRET": "secretmanager:/##STAGE##/app2:SUPER_SECRET"
-  }
-}
-```
+
+
+
+
+
+
+
 
 # Permissions
 ```

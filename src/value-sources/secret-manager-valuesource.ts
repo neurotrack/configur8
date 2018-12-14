@@ -1,14 +1,14 @@
 import { AWSError, Credentials, SecretsManager }  from 'aws-sdk';
 import { PromiseResult }                          from 'aws-sdk/lib/request';
 import { GetSecretValueResponse }                 from 'aws-sdk/clients/secretsmanager';
-import { AWSFacade }                              from './aws';
-import { ValueSource }                            from '../factory';
+import { AWSFacade }                              from '../lib/aws';
+import { ValueSource }                            from './value-source-factory';
 
 
 /**
  * Coordinates the lookup of a secret for the secret arn provided.
  */
-export class AWSSecretManagerValueSource implements ValueSource {
+export default class AWSSecretManagerValueSource implements ValueSource {
   
   private secretsManager:SecretsManager;
   private secretBundles:Map<string,SecretBundle>;
@@ -20,6 +20,13 @@ export class AWSSecretManagerValueSource implements ValueSource {
       credentials: AWSFacade.getCredentials()
     });
     this.secretBundles = new Map();
+  }
+
+  /**
+   * What prefix this value source wil involve itself in.
+   */
+  public getPrefix():string {
+    return 'secretsmanager';
   }
 
   /**

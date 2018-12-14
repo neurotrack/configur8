@@ -8,3 +8,4 @@ top:
     - aws-secretmanager:/(cli:ENVIRONMENT)/test:NONE "Another Constant"
     - aws-secretmanager:/(cli:ENVIRONMENT)/test:NONE
     - aws-secretmanager:/(cli:ENVIRONMENT)/test:FOO
+  

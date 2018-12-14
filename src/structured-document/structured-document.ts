@@ -1,9 +1,7 @@
 import * as yamlJS from 'js-yaml';
 import { Utils }   from '../lib/utils';
+import { Logger }  from '../lib/logger';
 
-/**
- * Matches on any word chunks with one or more semi colons in it.
- */
 export const VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_(])+?(:){1}([A-Za-z0-9_()\/\:])+/g);
 
 /**
@@ -19,22 +17,38 @@ export interface DocumentObject {
 }
 
 export class StructuredDocumentFactory {
+
+    private static LOGGER:Logger = new Logger('StructuredDocumentFactory')
+
+    public static setLogger(logger:Logger){
+        StructuredDocumentFactory.LOGGER = logger;
+    }
+
     /**
      * 
      * @param inFile to parse and return wrapped in a StructuredDocument instance.
      * @param sourceFormat to read the file as.
      */
     public static build(inFile: Buffer | string | object, sourceFormat: FileFormat):StructuredDocument {
+
+        StructuredDocumentFactory.LOGGER.debug(`build() - File type ${typeof(inFile)} sourceFormat ${sourceFormat}`);
+
         switch (sourceFormat) {
 
+            case FileFormat.JSON:
+
+                StructuredDocumentFactory.LOGGER.debug(`build() - Parsing file using JSON.`);
+
+                const originalJson:Object = inFile instanceof Buffer ? JSON.parse(inFile.toString('utf8')) : typeof (inFile) === 'string' ? JSON.parse(inFile) : inFile;
+                return new StructuredDocument(originalJson,sourceFormat);
+
             case FileFormat.YAML:
+            
+                StructuredDocumentFactory.LOGGER.debug(`build() - Parsing file using YAML.`);
+
                 const file: string = inFile instanceof Buffer ? inFile.toString('utf8') : typeof (inFile) === 'string' ? inFile : '' + inFile;
                 const originalYaml:Object = yamlJS.safeLoad(file);
                 return new StructuredDocument(originalYaml,sourceFormat);
-
-            case FileFormat.JSON:
-                const originalJson:Object = inFile instanceof Buffer ? JSON.parse(inFile.toString('utf8')) : typeof (inFile) === 'string' ? JSON.parse(inFile) : inFile;
-                return new StructuredDocument(originalJson,sourceFormat);
 
             default:
                 throw Error(`The file format provided (${sourceFormat}) is not yet handled.`);
@@ -102,8 +116,6 @@ export class StructuredDocument {
             (accumulator:any,key:string) => accumulator[key], 
             this.finalized
         );
-
-        console.log("update",{key,_value,lastAttribute,finalKey})
 
         if( finalKey.indexOf('[') !== -1 ) {
             const arrayKey = finalKey.substring(0,finalKey.indexOf('['));

@@ -12,7 +12,7 @@ export class AWSFacade {
     private static REGION_KEY:string         = 'AWS_REGION';
     private static PROFILE_KEY:string        = 'AWS_PROFILE';
     private static KEY_ID_KEY:string         = 'AWS_ACCESS_KEY_ID';
-    private static ACCESS_KEY_KEY:string     = 'AWS_ACCESS_KEY_ID';
+    private static ACCESS_KEY_KEY:string     = 'AWS_SECRET_ACCESS_KEY';
     private static SESSION_TOKEN_KEY:string  = 'AWS_SESSION_TOKEN';
 
     constructor(){
@@ -31,7 +31,9 @@ export class AWSFacade {
         const secretAccessKey:string | undefined = process.env[this.ACCESS_KEY_KEY];
         const sessionToken:string | undefined    = process.env[this.SESSION_TOKEN_KEY];
 
-        if(!!accessKeyId && !!secretAccessKey) return new AWS.Credentials({ accessKeyId, secretAccessKey })
+        if(!!accessKeyId && !!secretAccessKey) return new AWS.Credentials({ 
+            accessKeyId, secretAccessKey, sessionToken 
+        });
 
         throw Error('AWS Credentials are missing.');
     }

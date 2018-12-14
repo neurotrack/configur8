@@ -3,6 +3,7 @@
 const path          = require('path');
 const fs            = require('fs');
 const program       = require('commander');
+const logger        = require('../src/lib/logger');
 
 /* Lookup the package.json file to make use of its values */
 const root          = path.resolve(__dirname, ".", "..");
@@ -20,24 +21,7 @@ const coerceToFile = (filePath) => {
   }
 }
 
-let inputFile = null;
-let awsProfile = null;
-let awsRegion  = null;
-//TODO PREP YAML VARIABLE to be configured on the fly by params.
-
-/**
- * Convenience method for logging progress messages to the console
- * 
- * @param {string} message 
- * @param {string} level 
- */
-const log = (message,level) => {
-  const date = new Date();
-  if('ERROR' !== level) console.log(`${date.toUTCString()} -- ${rootCommand} [${level || 'INFO'}] ${message}`);
-  else console.error(`${date.toUTCString()} -- ${rootCommand} [ERROR] ${message}`);
-}
-
-log(`${rootCommand} -> INFO: Analyzing command line arguments.`);
+logger.log('Analyzing command line arguments.');
 
 /* Takes ownership of the dirtywork on the command parameters. */
 program
@@ -57,12 +41,16 @@ program
   .option('--aws-region <value>', 'The region to locate AWS resources within, such as secrets or parametrs.')
   .on('option:aws-region', region => {
     process.env['AWS_REGION'] = region;
-    log(`Setting AWS_REGION to "${region}"`);
+    logger.log(`Setting AWS_REGION to "${region}"`);
+  }).option('--debug', 'Enables detailed logging when specified.')
+  .on('option:debug', () => {
+    logger.logLevel = logger.LogLevel.DEBUG;
+    logger.log('Debug level logging enabled.');
   })
   .option('--aws-profile <value>', 'The profile to use when accessing AWS resources.')
   .on('option:aws-profile', profile => {
     process.env['AWS_PROFILE'] = profile;
-    log(`Setting AWS_PROFILE to "${profile}"`);
+    logger.log(`Setting AWS_PROFILE to "${profile}"`);
   })
   .option('--args <values...>','Pass your own cli arguments for varaible replacment within the specified file. Each value must be separated by a comma and in a key=value format.')
   .action( (file, cmd) => {
@@ -74,9 +62,9 @@ program
       // console.log("awsProfile",awsRegion)
 
       // console.log("awsProfile",awsRegion)
-      log(`Reading the input file, ${file}`);
+      logger.log(`Reading the input file, ${file}`);
       inputFile = coerceToFile(file);
-      log('Reading complete.');
+      logger.log('Reading complete.');
 
       
 //       fs.writeFileSync(resolvedOutputPath,JSON.stringify(upatedConfiguration,null,4));

@@ -1,24 +1,32 @@
 
 
-import { ValueSource, ValueSourceService } from './value-sources/value-source-factory';
-import { StructuredDocument, FileFormat, StructuredDocumentFactory, VALUE_PATTERN } from './structured-document/structured-document';
-import { ValueInjector } from './value-injector/value-injector';
+import { ValueSourceService }        from './value-sources/value-source-service';
+import { 
+  StructuredDocument, 
+  FileFormat, 
+  StructuredDocumentFactory }        from './structured-document/structured-document';
+import { ValueInjector }             from './value-injector/value-injector';
 import { ValueInjectorArrayBuilder } from './value-injector/value-injector-array-builder';
-import { INLINE_VALUE_PATTERN } from './value-injector/inline-value-injector';
+import { Logger, LogLevel, diagnosticDump } from './lib/logger';
 
 /**
  * Entrypoint object into variable lookup and replacement behavior.
  */
 export class ValueLookup {
 
+  private logger: Logger;
   private outputFormat: FileFormat;
   private inputFormat: FileFormat;
   private valueSourceService:ValueSourceService;
 
-  constructor() {
+  constructor(logLevel?:LogLevel) {
     this.outputFormat       = FileFormat.JSON;
     this.inputFormat        = FileFormat.JSON;
-    this.valueSourceService = new ValueSourceService();
+    this.logger             = new Logger(undefined,logLevel);
+    this.valueSourceService = new ValueSourceService(this.logger);
+
+    ValueInjectorArrayBuilder.setLogger(this.logger.child('ValueInjectorArrayBuilder'));
+    StructuredDocumentFactory.setLogger(this.logger.child('StructuredDocumentFactory'));
   }
 
   /**
@@ -51,8 +59,8 @@ export class ValueLookup {
     if(this.outputFormat === undefined || this.outputFormat === null) throw `There is no output format specified.`;
 
     const structuredDocument: StructuredDocument = StructuredDocumentFactory.build(inFile, this.inputFormat);
-    const valueInjectors:ValueInjector[]         = ValueInjectorArrayBuilder.build(this.valueSourceService);
-    let   promise:Promise<StructuredDocument>    = Promise.resolve(structuredDocument);
+    const valueInjectors: ValueInjector[]        = ValueInjectorArrayBuilder.build(this.valueSourceService);
+    let   promise :Promise<StructuredDocument>   = Promise.resolve(structuredDocument);
 
     for( const valueInjector of valueInjectors) {
       promise = promise.then( () => valueInjector.replaceAllIn(structuredDocument) );
@@ -64,20 +72,20 @@ export class ValueLookup {
   }
 }
 
-new ValueLookup()
+new ValueLookup(LogLevel.INFO)
   .setOutputFormat(FileFormat.JSON)
   .setOutputFormat(FileFormat.JSON)
   .execute({
-    // parent: {
-      // foo: "cli:CLI_FOO Some Default"
-    // },
-    // environment: "cli:ENVIRONMENT DEV",
-    // stage: "development",
-    secret: "aws-secretmanager:/(cli:ENVIRONMENT)/(cli:CLI_FOO)/test:NONE",
-    // list: [
-    //   "cli:FOO_TOO",
-    //   "(cli:FOO_TOO) Or Some Other Default"
-    // ]
+    parent: {
+      hello: "aws-secretsmanager:/(cli:STAGE)/auth0:HELLO"
+    },
+    environment: "cli:STAGE",
+    stage: "development",
+    secret: "aws-secretsmanager:/(cli:STAGE)/auth0:FOO",
+    list: [
+      "cli:FOO",
+      "(cli:FOO) Or Some Other Default"
+    ]
   })
   .then(buffer => console.log("DONE!!!!! ->", buffer.toString('utf8')))
   .catch(error => console.error(error))

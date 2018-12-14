@@ -67,15 +67,11 @@ Within your 'tenant' yaml file you can make reference to external configurations
 
 
 ```
-
-
-
-
-
-
-
-
-
+# TODO
+*  Update readme to have a cleaner organization around possible value sources.
+* ADD xml support?
+* What other structured document types?
+* 
 
 # Permissions
 ```

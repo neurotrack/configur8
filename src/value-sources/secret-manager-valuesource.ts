@@ -2,7 +2,8 @@ import { AWSError, Credentials, SecretsManager }  from 'aws-sdk';
 import { PromiseResult }                          from 'aws-sdk/lib/request';
 import { GetSecretValueResponse }                 from 'aws-sdk/clients/secretsmanager';
 import { AWSFacade }                              from '../lib/aws';
-import { ValueSource }                            from './value-source-factory';
+import { ValueSource }                            from './value-source-service';
+import { Logger } from '../lib/logger';
 
 
 /**
@@ -12,21 +13,23 @@ export default class AWSSecretManagerValueSource implements ValueSource {
   
   private secretsManager:SecretsManager;
   private secretBundles:Map<string,SecretBundle>;
+  private logger:Logger;
 
-  constructor() {
+  constructor(parentLogger?:Logger) {
     this.secretsManager = new SecretsManager({
       apiVersion: '2017-10-17',
       region: AWSFacade.getRegion(),
       credentials: AWSFacade.getCredentials()
     });
     this.secretBundles = new Map();
+    this.logger = parentLogger ? parentLogger.child('AWSSecretManagerValueSource') : new Logger('AWSSecretManagerValueSource');
   }
 
   /**
    * What prefix this value source wil involve itself in.
    */
   public getPrefix():string {
-    return 'secretsmanager';
+    return 'aws-secretsmanager';
   }
 
   /**
@@ -34,10 +37,18 @@ export default class AWSSecretManagerValueSource implements ValueSource {
    * 
    * @param named 
    */
-  public getValue(named:string):Promise<string>{
-    const valueARN:SecretValueARN = new SecretValueARN(named);
+  public getValue(nameARN:string):Promise<string>{
+
+    this.logger.debug(`getValue() --> ${nameARN}`);
+
+    const valueARN:SecretValueARN = new SecretValueARN(nameARN);
     const bundle:SecretBundle     = this.getSecretsBundle(valueARN.bundleName);
-    return bundle.getValue(valueARN.valueName);
+    
+    return bundle.getValue(valueARN.valueName)
+      .then( (value:string) => {
+        this.logger.debug(`getValue() <-- ${nameARN} = ${value}`);
+        return value;
+      })
   }
 
   /**
@@ -50,7 +61,7 @@ export default class AWSSecretManagerValueSource implements ValueSource {
     let bundle:SecretBundle | undefined = this.secretBundles.get(bundleName);
     
     if(!bundle) {
-      bundle = new SecretBundle(bundleName,this.secretsManager);
+      bundle = new SecretBundle(this.logger, bundleName, this.secretsManager);
     }
     
     return bundle;
@@ -80,11 +91,13 @@ class SecretValueARN {
  */
 class SecretBundle {
   
-  private secrets:Promise<any>;
-  private bundleName:string;
+  private secrets: Promise<any>;
+  private bundleName: string;
+  private logger: Logger;
 
-  constructor(bundleName:string, secretsManager:SecretsManager){
+  constructor(parentLogger:Logger, bundleName:string, secretsManager:SecretsManager){
     this.bundleName = bundleName;
+    this.logger     = parentLogger.child(`SecretBundle[${this.bundleName}]`);
     this.secrets    = secretsManager
       .getSecretValue({
         SecretId: bundleName
@@ -106,10 +119,7 @@ class SecretBundle {
    * @param name of the value within the secret bundle to return.
    */
   public getValue(valueName:string):Promise<string> {
-    return this.secrets.then( (secrets:any) => {
-      if(!secrets[valueName]) return Promise.reject(`There was no value found for secret: ${this.bundleName}:${valueName}`);
-
-      return secrets[valueName];
-    })
+    this.logger.debug('getValue() -->');
+    return this.secrets.then( (secrets:any) => secrets[valueName] );
   }
 }

@@ -1,4 +1,4 @@
-import { ValueSource, ValueSourceService }        from "../value-sources/value-source-factory";
+import { ValueSource, ValueSourceService }        from "../value-sources/value-source-service";
 import { StructuredDocument } from "../structured-document/structured-document";
 
 /**
@@ -9,7 +9,7 @@ import { StructuredDocument } from "../structured-document/structured-document";
  */
 export abstract class ValueInjector {
 
-    private valueSourceService:ValueSourceService;
+    private valueSourceService: ValueSourceService;
 
     constructor(valueSourceService:ValueSourceService){
         this.valueSourceService = valueSourceService;
@@ -34,5 +34,9 @@ export abstract class ValueInjector {
      */
     protected getValueSource(_prefix: string): Promise<ValueSource> {
         return this.valueSourceService.getValueSource(_prefix);
+    }
+
+    protected log(message:string,level?:string){
+        if(level && 'ERROR' === level.toUpperCase()) console.log(``)
     }
 }

@@ -1,6 +1,9 @@
 import { ValueInjector }      from "./value-injector";
-import { ValueSource, ValueSourceService }        from "../value-sources/value-source-factory";
+import { 
+    ValueSource, 
+    ValueSourceService }      from "../value-sources/value-source-service";
 import { StructuredDocument } from "../structured-document/structured-document";
+import { Logger } from "../lib/logger";
 
 /**
  * Matches on any word chunks that have a semi colon, and is wrapped within
@@ -10,8 +13,11 @@ export const INLINE_VALUE_PATTERN:RegExp = new RegExp(/(\(){1}(.)+?(\:){1}(.)+?(
 
 export class InlineValueInjector extends ValueInjector {
 
-    constructor(valueSourceService:ValueSourceService){
+    private logger: Logger;
+
+    constructor(parentLogger:Logger, valueSourceService:ValueSourceService){
         super(valueSourceService);
+        this.logger = parentLogger.child('ReplacingValueInjector');
     }
 
     /**
@@ -26,6 +32,8 @@ export class InlineValueInjector extends ValueInjector {
      * @param document to replace all values within.
      */
     public replaceAllIn(structuredDocument:StructuredDocument):Promise<StructuredDocument>{
+        
+        this.logger.debug('replaceAllIn() -->');
 
         const flattened:Map<string,any> = structuredDocument.getFlattened();
         const promises:Promise<void>[]  = Array.from(flattened.keys())
@@ -36,7 +44,7 @@ export class InlineValueInjector extends ValueInjector {
                 const matches:RegExpMatchArray | null = value.match(INLINE_VALUE_PATTERN);
                 let   promiseChain:Promise<void>      = Promise.resolve();
 
-                console.log("replaceAllIn()",{key,value,matches});
+                this.logger.debug({key,value,matches});
 
                 if(!matches) return Promise.resolve();
 
@@ -57,16 +65,25 @@ export class InlineValueInjector extends ValueInjector {
                         promiseChain = promiseChain
                             .then( () => this.getValueSource(valueARN) )
                             .then( (valueSource:ValueSource) => valueSource.getValue(valueARN) )
-                            .then( (resolvedValue:string) => {
-                                console.log("replaceAllIn() --- ",{match,resolvedValue,valueARN});
+                            .then( (resolvedValue:string | undefined) => {
+                                //TODO Be nice to consider a wider context
+                                //     to allow this exception to not be thrown
+                                //     when the inline value is inconsiquential.
+                                //     For now its assumed it could be within the
+                                //     pattern of another value and must resolve.
+                                if(!resolvedValue) throw `No value found for ${match} at ${key}.`;
+                                this.logger.info(`Replacing "${value}" with "${resolvedValue}" in "${key}".`);
                                 value = structuredDocument.updateValue(key,value.replace(match,resolvedValue));
-                            })
+                            });
                     });
 
                 return promiseChain;
             })
 
         return Promise.all(promises)
-            .then( () => structuredDocument );
+            .then( () => {
+                this.logger.debug('replaceAllIn() <-- ');
+                return structuredDocument
+             });
     }
 }

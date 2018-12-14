@@ -19,10 +19,10 @@ export class ValueLookup {
   private inputFormat: FileFormat;
   private valueSourceService:ValueSourceService;
 
-  constructor(logLevel?:LogLevel) {
+  constructor(parentLogger?:Logger) {
     this.outputFormat       = FileFormat.JSON;
     this.inputFormat        = FileFormat.JSON;
-    this.logger             = new Logger(undefined,logLevel);
+    this.logger             = parentLogger ? parentLogger.child('ValueLookup') : new Logger();
     this.valueSourceService = new ValueSourceService(this.logger);
 
     ValueInjectorArrayBuilder.setLogger(this.logger.child('ValueInjectorArrayBuilder'));
@@ -35,8 +35,13 @@ export class ValueLookup {
    * 
    * @param outputFormat to return the document in.
    */
-  public setOutputFormat(outputFormat: FileFormat) {
-    this.outputFormat = outputFormat;
+  public setOutputFormat(outputFormat: FileFormat | string) {
+    if(typeof(outputFormat)==='string') {
+      const key = outputFormat as keyof typeof FileFormat;
+      this.outputFormat = FileFormat[key];
+    } else {
+      this.outputFormat = outputFormat;
+    }
     return this;
   }
 
@@ -44,8 +49,13 @@ export class ValueLookup {
    * 
    * @param inputFormat to parse the document as.
    */
-  public setInputFormat(inputFormat: FileFormat) {
-    this.inputFormat = inputFormat;
+  public setInputFormat(inputFormat: FileFormat | string) {
+    if(typeof(inputFormat)==='string') {
+      const key = inputFormat as keyof typeof FileFormat;
+      this.inputFormat = FileFormat[key];
+    } else {
+      this.inputFormat = inputFormat;
+    }
     return this;
   }
 
@@ -67,25 +77,9 @@ export class ValueLookup {
     }
 
     return promise
-      //TODO Write the document in the requested format.
-      .then( (structuredDocument:StructuredDocument) => Buffer.from( JSON.stringify(structuredDocument.getFinal(),null,4)) )
+      .then( (structuredDocument:StructuredDocument) => {
+        this.logger.info(`Formatting output as ${this.outputFormat}.`);
+        return structuredDocument.getFinal(this.outputFormat);
+      })
   }
 }
-
-new ValueLookup(LogLevel.INFO)
-  .setOutputFormat(FileFormat.JSON)
-  .setOutputFormat(FileFormat.JSON)
-  .execute({
-    parent: {
-      hello: "aws-secretsmanager:/(cli:STAGE)/auth0:HELLO"
-    },
-    environment: "cli:STAGE",
-    stage: "development",
-    secret: "aws-secretsmanager:/(cli:STAGE)/auth0:FOO",
-    list: [
-      "cli:FOO",
-      "(cli:FOO) Or Some Other Default"
-    ]
-  })
-  .then(buffer => console.log("DONE!!!!! ->", buffer.toString('utf8')))
-  .catch(error => console.error(error))

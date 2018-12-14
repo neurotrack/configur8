@@ -38,13 +38,13 @@ export class ValueSourceService{
      * 
      * @param prefix Of the value source to return.
      */
-    public getValueSource(_prefix:string):Promise<ValueSource> {
+    public getValueSource(_prefix:string):Promise<ValueSource | undefined> {
         this.logger.debug(`getValueSource() --> ${_prefix}`);
         const prefix:string = _prefix.indexOf(':') !== -1 ? _prefix.substring(0,_prefix.indexOf(':')) : _prefix;
         return this.getValueSources()
             .then( (valueSources:ValueSource[]) => {
                 const valueSource:ValueSource | undefined = valueSources.find( (value:ValueSource) => value.getPrefix() === prefix );
-                if(!valueSource) return Promise.reject(`No value source could be found with the prefix ${prefix}.`);
+                if(!valueSource) this.logger.info(`No source could be found with the prefix "${prefix}:".`);
                 return Promise.resolve(valueSource);
             });
     }

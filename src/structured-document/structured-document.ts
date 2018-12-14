@@ -8,8 +8,8 @@ export const VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_(])+?(:){1}([A-Za-z
  * Possible output
  */
 export enum FileFormat {
-    JSON,
-    YAML
+    JSON = 'JSON',
+    YAML = 'YAML'
 }
 
 export interface DocumentObject {
@@ -133,8 +133,21 @@ export class StructuredDocument {
     /**
      * The finalized object with values replaced.
      */
-    public getFinal():DocumentObject {
-        return this.finalized;
+    public getFinal(_fileFormat?:FileFormat):Buffer {
+        const fileFormat: FileFormat = _fileFormat || this.getOriginalFileFormat();
+        switch (fileFormat) {
+            case FileFormat.YAML:
+                console.log("To write as yaml",JSON.stringify(this.finalized,null,4))
+                return Buffer.from( yamlJS.dump(this.finalized, {
+                    indent: 4,
+                    lineWidth: 120,
+                    noRefs: true
+                }) )
+        
+            case FileFormat.JSON:
+            default:
+            return Buffer.from( JSON.stringify(this.finalized,null,4));
+        }
     }
 
     /**

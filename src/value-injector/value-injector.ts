@@ -32,7 +32,7 @@ export abstract class ValueInjector {
      * 
      * @param _prefix or full valueARN to locate a ValueSource using.
      */
-    protected getValueSource(_prefix: string): Promise<ValueSource> {
+    protected getValueSource(_prefix: string): Promise<ValueSource | undefined> {
         return this.valueSourceService.getValueSource(_prefix);
     }
 

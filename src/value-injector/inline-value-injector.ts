@@ -64,9 +64,9 @@ export class InlineValueInjector extends ValueInjector {
                          */
                         promiseChain = promiseChain
                             .then( () => this.getValueSource(valueARN) )
-                            .then( (valueSource:ValueSource) => valueSource.getValue(valueARN) )
+                            .then( (valueSource:ValueSource | undefined) => valueSource ? valueSource.getValue(valueARN) : Promise.reject('-skip-') )
                             .then( (resolvedValue:string | undefined) => {
-                                //TODO Be nice to consider a wider context
+                                //TODO Be nice to consider a wider contexst
                                 //     to allow this exception to not be thrown
                                 //     when the inline value is inconsiquential.
                                 //     For now its assumed it could be within the
@@ -74,7 +74,10 @@ export class InlineValueInjector extends ValueInjector {
                                 if(!resolvedValue) throw `No value found for ${match} at ${key}.`;
                                 this.logger.info(`Replacing "${value}" with "${resolvedValue}" in "${key}".`);
                                 value = structuredDocument.updateValue(key,value.replace(match,resolvedValue));
-                            });
+                            })
+                            .catch( (error: Error | string) => {
+                                if(error !== '-skip-') throw error;
+                            })
                     });
 
                 return promiseChain;

@@ -9,7 +9,7 @@ import { Logger }             from "../lib/logger";
  * Matches on any word chunks that have a semi colon, and is wrapped within
  * braces ( ).
  */
-export const REPLACEMENT_VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_])+?(:){1}([A-Za-z0-9_\/\:])+/g);
+export const REPLACEMENT_VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_])+?(:){1}([A-Za-z0-9_/:])+/g);
 
 export class ReplacingValueInjector extends ValueInjector {
 
@@ -78,14 +78,18 @@ export class ReplacingValueInjector extends ValueInjector {
                          */
                         promiseChain = promiseChain
                             .then( () => this.getValueSource(match) )
-                            .then( (valueSource: ValueSource) => valueSource.getValue(match) )
-                            .then( (resolvedValue: string | undefined) => {
-                                this.logger.debug({match,resolvedValue});
+                            .then( (valueSource: ValueSource | undefined) => valueSource ? valueSource.getValue(match) : undefined )
+                            .then( (resolvedValue: string | undefined ) => {
                                 if( !resolvedValue ) this.logger.debug(`No value found for ${match}`);
+                                else {
+                                    this.logger.info(`Replacing "${value}" with "${resolvedValue}" on "${key}".`);
+                                    
+                                    isReplaced = true;
+                                    structuredDocument.updateValue(key,resolvedValue);
+                                }
+                            })
+                            .catch( (error) => {
 
-                                this.logger.info(`Replacing "${value}" with "${resolvedValue}" on "${key}".`);
-                                isReplaced = true;
-                                structuredDocument.updateValue(key,resolvedValue);
                             })
                     });
 

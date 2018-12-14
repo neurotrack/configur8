@@ -58,10 +58,12 @@ export class Logger {
 
     private level: LogLevel;
     private prefix: string[];
+    private children: Logger[];
 
     constructor(name?:string, level?:LogLevel){
-        this.level  = level || logLevel || LogLevel.INFO;
-        this.prefix = [name || rootCommand];
+        this.level    = level || logLevel || LogLevel.INFO;
+        this.prefix   = [name || rootCommand];
+        this.children = [];
     }
 
     public debug(message:string | object):void {
@@ -79,7 +81,13 @@ export class Logger {
     public child(name:string):Logger {
         const logger:Logger = new Logger(name,this.level);
         logger.setPrefix(this.prefix.concat(name));
+        this.children.push(logger);
         return logger;
+    }
+
+    public setLevel(level:LogLevel){
+        this.level = level;
+        this.children.forEach( (child:Logger) => child.setLevel(this.level) );
     }
 
     private setPrefix(prefix:string[]) {

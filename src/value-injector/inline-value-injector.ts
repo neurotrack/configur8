@@ -32,7 +32,7 @@ export class InlineValueInjector extends ValueInjector {
             .filter( (key:string) => INLINE_VALUE_PATTERN.test( flattened.get(key) ) )
             .map( (key:string) => {
 
-                const value:string                    = flattened.get(key);
+                let   value:string                    = flattened.get(key);
                 const matches:RegExpMatchArray | null = value.match(INLINE_VALUE_PATTERN);
                 let   promiseChain:Promise<void>      = Promise.resolve();
 
@@ -47,23 +47,21 @@ export class InlineValueInjector extends ValueInjector {
                     },[])
                     .map( (match:string) => {
                     
-                    const valueARN:string = match.replace(/\(?\)?/g,'');
-
-                    console.log("replaceAllIn()",{match,valueARN});
-                    
-                    /**
-                     * Resolving each value in the chain serially ensures that we
-                     * will not end up with paralelle workers clobering values
-                     * as others are trying to resolve them.
-                     */
-                    promiseChain = promiseChain
-                        .then( () => this.getValueSource(valueARN) )
-                        .then( (valueSource:ValueSource) => valueSource.getValue(valueARN) )
-                        .then( (resolvedValue:string) => {
-                            console.log("replace",{resolvedValue})
-                            structuredDocument.updateValue(key,value.replace(match,resolvedValue));
-                        })
-                });
+                        const valueARN:string = match.replace(/\(?\)?/g,'');
+                        
+                        /**
+                         * Resolving each value in the chain serially ensures that we
+                         * will not end up with paralelle workers clobering values
+                         * as others are trying to resolve them.
+                         */
+                        promiseChain = promiseChain
+                            .then( () => this.getValueSource(valueARN) )
+                            .then( (valueSource:ValueSource) => valueSource.getValue(valueARN) )
+                            .then( (resolvedValue:string) => {
+                                console.log("replaceAllIn() --- ",{match,resolvedValue,valueARN});
+                                value = structuredDocument.updateValue(key,value.replace(match,resolvedValue));
+                            })
+                    });
 
                 return promiseChain;
             })

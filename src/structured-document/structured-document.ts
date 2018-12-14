@@ -94,7 +94,7 @@ export class StructuredDocument {
      * @param key in dot notation of the value to update.
      * @param _value the value to use.
      */
-    public updateValue(key:string,_value:any) {
+    public updateValue(key:string,_value:any):string {
 
         const keyPaths:string[] = key.split('.');
         const finalKey:string   = keyPaths.pop() || '';
@@ -114,6 +114,8 @@ export class StructuredDocument {
             lastAttribute[finalKey] = _value;
 
         }
+
+        return lastAttribute[finalKey];
     }
 
     /**

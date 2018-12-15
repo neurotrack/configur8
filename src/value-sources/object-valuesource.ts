@@ -20,7 +20,7 @@ export default class ObjectValueSource implements ValueSource {
         accumulator[value.split('=')[0]] = value.split('=')[1];
         return accumulator;
       }, {});
-      this.logger = parentLogger ? parentLogger.child('AWSSecretManagerValueSource') : new Logger('AWSSecretManagerValueSource');
+      this.logger = parentLogger ? parentLogger.child('ObjectValueSource') : new Logger('ObjectValueSource');
   }
 
   public getPrefix():string {

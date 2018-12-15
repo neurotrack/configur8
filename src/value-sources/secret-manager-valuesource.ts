@@ -1,9 +1,9 @@
-import { AWSError, Credentials, SecretsManager }  from 'aws-sdk';
-import { PromiseResult }                          from 'aws-sdk/lib/request';
-import { GetSecretValueResponse }                 from 'aws-sdk/clients/secretsmanager';
-import { AWSFacade }                              from '../lib/aws';
-import { ValueSource }                            from './value-source-service';
-import { Logger } from '../lib/logger';
+import { AWSError, SecretsManager } from 'aws-sdk';
+import { PromiseResult }            from 'aws-sdk/lib/request';
+import { GetSecretValueResponse }   from 'aws-sdk/clients/secretsmanager';
+import { AWSFacade }                from '../lib/aws';
+import { ValueSource }              from './value-source-service';
+import { Logger }                   from '../lib/logger';
 
 
 /**
@@ -104,8 +104,12 @@ class SecretBundle {
       })
       .promise()
       .then( (response:PromiseResult<GetSecretValueResponse, AWSError>) => {
-        if (response instanceof Error) throw response;
+        if (response instanceof Error) {
+          this.logger.error(`\n\n\nProblem getting bundle ${this.bundleName}\n\n\n`)
+          throw response;
+        }
         const secretString:string | undefined = (<GetSecretValueResponse>response).SecretString;
+        this.logger.debug(`The secret bundle was loaded, ${secretString}`);
         try{
           return secretString ? JSON.parse(secretString) : null;
         } catch(error) {
@@ -119,7 +123,11 @@ class SecretBundle {
    * @param name of the value within the secret bundle to return.
    */
   public getValue(valueName:string):Promise<string> {
-    this.logger.debug('getValue() -->');
-    return this.secrets.then( (secrets:any) => secrets[valueName] );
+      this.logger.debug('getValue() -->');
+      return this.secrets
+          .then( (secrets:any) => {
+            this.logger.debug(`getValue() <-- ${JSON.stringify(secrets)}`);
+            return secrets[valueName];
+          })
   }
 }

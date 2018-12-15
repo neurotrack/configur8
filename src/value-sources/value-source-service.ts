@@ -14,8 +14,9 @@ export interface ValueSource {
 
 export class ValueSourceService{
 
-    private valueSources:ValueSource[] | undefined;
-    private logger:Logger;
+    private valueSources: ValueSource[] | undefined;
+    private logger: Logger;
+    private loading: Promise<ValueSource[]> | undefined;
 
     constructor(parentLogger?:Logger){
       this.logger = parentLogger ? parentLogger.child('ValueSourceService') : new Logger('ParentSourceService');
@@ -44,7 +45,9 @@ export class ValueSourceService{
         return this.getValueSources()
             .then( (valueSources:ValueSource[]) => {
                 const valueSource:ValueSource | undefined = valueSources.find( (value:ValueSource) => value.getPrefix() === prefix );
-                if(!valueSource) this.logger.info(`No source could be found with the prefix "${prefix}:".`);
+                if(!valueSource) {
+                  this.logger.info(`No source could be found with the prefix "${prefix}:".`);
+                }
                 return Promise.resolve(valueSource);
             });
     }
@@ -56,13 +59,16 @@ export class ValueSourceService{
 
         this.logger.debug(`getValueSources() -->`);
 
-        if(!this.valueSources) {
+        if(!this.valueSources && this.loading) {
+          return this.loading;
+
+        } else if(!this.valueSources) {
 
             const valueSourceClasses = fs.readdirSync(path.resolve(__dirname, './'))
                 .filter( (name:string) => name.endsWith('-valuesource.ts') )
                 .map( (name:string) => import(path.resolve(__dirname, './', name) ) )
 
-            return Promise.all(valueSourceClasses)
+            return this.loading = Promise.all(valueSourceClasses)
                 .then( (resolved:any[]) => resolved
                     .map( resolve => resolve.default )
                     .map( clazz => new clazz(this.logger) )
@@ -78,4 +84,3 @@ export class ValueSourceService{
         }
     }
 }
-

@@ -17,7 +17,7 @@ export class InlineValueInjector extends ValueInjector {
 
     constructor(parentLogger:Logger, valueSourceService:ValueSourceService){
         super(valueSourceService);
-        this.logger = parentLogger.child('ReplacingValueInjector');
+        this.logger = parentLogger.child('InlineValueInjector');
     }
 
     /**

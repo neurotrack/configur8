@@ -14,72 +14,74 @@ import { Logger, LogLevel, diagnosticDump } from './lib/logger';
  */
 export class ValueLookup {
 
-  private logger: Logger;
-  private outputFormat: FileFormat;
-  private inputFormat: FileFormat;
-  private valueSourceService:ValueSourceService;
+    private logger: Logger;
+    private outputFormat: FileFormat;
+    private inputFormat: FileFormat;
+    private valueSourceService:ValueSourceService;
 
-  constructor(parentLogger?:Logger) {
-    this.outputFormat       = FileFormat.JSON;
-    this.inputFormat        = FileFormat.JSON;
-    this.logger             = parentLogger ? parentLogger.child('ValueLookup') : new Logger();
-    this.valueSourceService = new ValueSourceService(this.logger);
+    constructor(parentLogger?:Logger) {
+        this.outputFormat       = FileFormat.JSON;
+        this.inputFormat        = FileFormat.JSON;
+        this.logger             = parentLogger ? parentLogger.child('ValueLookup') : new Logger();
+        this.valueSourceService = new ValueSourceService(this.logger);
 
-    ValueInjectorArrayBuilder.setLogger(this.logger.child('ValueInjectorArrayBuilder'));
-    StructuredDocumentFactory.setLogger(this.logger.child('StructuredDocumentFactory'));
-  }
-
-  /**
-   * The output format will be a buffer that can be written directly to a
-   * file. Either JSON or YAML is valid.
-   * 
-   * @param outputFormat to return the document in.
-   */
-  public setOutputFormat(outputFormat: FileFormat | string) {
-    if(typeof(outputFormat)==='string') {
-      const key = outputFormat as keyof typeof FileFormat;
-      this.outputFormat = FileFormat[key];
-    } else {
-      this.outputFormat = outputFormat;
-    }
-    return this;
-  }
-
-  /**
-   * 
-   * @param inputFormat to parse the document as.
-   */
-  public setInputFormat(inputFormat: FileFormat | string) {
-    if(typeof(inputFormat)==='string') {
-      const key = inputFormat as keyof typeof FileFormat;
-      this.inputFormat = FileFormat[key];
-    } else {
-      this.inputFormat = inputFormat;
-    }
-    return this;
-  }
-
-  /**
-   * 
-   */
-  public execute(inFile: Buffer | string | object): Promise<Buffer> {
-
-    if(!inFile) throw `There was no source file provided.`;
-    if(this.inputFormat === undefined || this.inputFormat === null) throw `There is no input format specified.`;
-    if(this.outputFormat === undefined || this.outputFormat === null) throw `There is no output format specified.`;
-
-    const structuredDocument: StructuredDocument = StructuredDocumentFactory.build(inFile, this.inputFormat);
-    const valueInjectors: ValueInjector[]        = ValueInjectorArrayBuilder.build(this.valueSourceService);
-    let   promise :Promise<StructuredDocument>   = Promise.resolve(structuredDocument);
-
-    for( const valueInjector of valueInjectors) {
-      promise = promise.then( () => valueInjector.replaceAllIn(structuredDocument) );
+        ValueInjectorArrayBuilder.setLogger(this.logger.child('ValueInjectorArrayBuilder'));
+        StructuredDocumentFactory.setLogger(this.logger.child('StructuredDocumentFactory'));
     }
 
-    return promise
-      .then( (structuredDocument:StructuredDocument) => {
-        this.logger.info(`Formatting output as ${this.outputFormat}.`);
-        return structuredDocument.getFinal(this.outputFormat);
-      })
-  }
+    /**
+     * The output format will be a buffer that can be written directly to a
+     * file. Either JSON or YAML is valid.
+     * 
+     * @param outputFormat to return the document in.
+     */
+    public setOutputFormat(outputFormat: FileFormat | string) {
+        if(typeof(outputFormat)==='string') {
+            const key = outputFormat as keyof typeof FileFormat;
+            this.outputFormat = FileFormat[key];
+        } else {
+            this.outputFormat = outputFormat;
+        }
+        return this;
+    }
+
+    /**
+     * 
+     * @param inputFormat to parse the document as.
+     */
+    public setInputFormat(inputFormat: FileFormat | string) {
+        if(typeof(inputFormat)==='string') {
+            const key = inputFormat as keyof typeof FileFormat;
+            this.inputFormat = FileFormat[key];
+        } else {
+          this.inputFormat = inputFormat;
+        }
+        return this;
+    }
+
+    /**
+     * 
+     */
+    public execute(inFile: Buffer | string | object): Promise<Buffer> {
+
+        if(!inFile) throw `There was no source file provided.`;
+        if(this.inputFormat === undefined || this.inputFormat === null) throw `There is no input format specified.`;
+        if(this.outputFormat === undefined || this.outputFormat === null) throw `There is no output format specified.`;
+
+        const structuredDocument: StructuredDocument = StructuredDocumentFactory.build(inFile, this.inputFormat);
+        const valueInjectors: ValueInjector[]        = ValueInjectorArrayBuilder.build(this.valueSourceService);
+        let   promise :Promise<StructuredDocument>   = Promise.resolve(structuredDocument);
+
+        for( const valueInjector of valueInjectors) {
+            promise = promise.then( (structuredDocument:StructuredDocument) => {
+                return valueInjector.replaceAllIn(structuredDocument) 
+            });
+        }
+
+        return promise
+          .then( (structuredDocument:StructuredDocument) => {
+            this.logger.info(`Formatting output as ${this.outputFormat}.`);
+            return structuredDocument.getFinal(this.outputFormat);
+          })
+    }
 }

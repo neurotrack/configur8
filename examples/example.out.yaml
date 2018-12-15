@@ -1,0 +1,9 @@
+top:
+    label: 'Hello "this:George"'
+    environment: dev
+    secret: Barow
+    clientId: 'aws-parameterstore:/dev/pstest/CLIENT'
+    arrayValues:
+        - 'aws-parameterstore:/dev/pstest/secret'
+        - dev
+        - 'aws-secretsmanager:/dev/auth0:NOT_THERE'

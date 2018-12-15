@@ -92,7 +92,7 @@ program
             const outputPath = cmd.out.startsWith('.') ? path.join('.', cmd.out) : cmd.out;
             fs.writeFileSync(outputPath,buffer);
           })
-          .catch( error => logger.error(error,'ERROR'))
+          .catch( (error) => console.error(error.message,error) );
     }
   })
 

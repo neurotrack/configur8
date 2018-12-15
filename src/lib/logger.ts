@@ -71,7 +71,7 @@ export class Logger {
     }
 
     public info(message:string | object):void {
-        if(LogLevel.INFO <= this.level) log(message, LogLevel.INFO, this.prefix.join('.'));
+        if(LogLevel.INFO >= this.level) log(message, LogLevel.INFO, this.prefix.join('.'));
     }
 
     public error(message:string | object):void {

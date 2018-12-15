@@ -9,7 +9,7 @@ import { Logger }             from "../lib/logger";
  * Matches on any word chunks that have a semi colon, and is wrapped within
  * braces ( ).
  */
-export const REPLACEMENT_VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_])+?(:){1}([A-Za-z0-9_/:])+/g);
+export const REPLACEMENT_VALUE_PATTERN:RegExp = new RegExp(/([A-Za-z0-9-_])+?(:){1}([A-Za-z0-9_/:()])+/g);
 
 export class ReplacingValueInjector extends ValueInjector {
 
@@ -64,33 +64,14 @@ export class ReplacingValueInjector extends ValueInjector {
                         return accumulator;
                     },[])
                     .map( (match: string) => {
-                        
-                        /**
-                         * If its already replaced stop going through the matches and
-                         * resolving them to values.
-                         */
-                        if(isReplaced) return promiseChain;
-
                         /**
                          * Resolving each value in the chain serially ensures that we
                          * will not end up with paralelle workers clobering values
                          * as others are trying to resolve them.
                          */
                         promiseChain = promiseChain
-                            .then( () => this.getValueSource(match) )
-                            .then( (valueSource: ValueSource | undefined) => valueSource ? valueSource.getValue(match) : undefined )
-                            .then( (resolvedValue: string | undefined ) => {
-                                if( !resolvedValue ) this.logger.debug(`No value found for ${match}`);
-                                else {
-                                    this.logger.info(`Replacing "${value}" with "${resolvedValue}" on "${key}".`);
-                                    
-                                    isReplaced = true;
-                                    structuredDocument.updateValue(key,resolvedValue);
-                                }
-                            })
-                            .catch( (error) => {
-
-                            })
+                            .then( () => !isReplaced ? this.replaceForOne(value,key,match,structuredDocument) : true )
+                            .then( (didReplacement:boolean) => { isReplaced = didReplacement } )
                     });
 
                 return promiseChain;
@@ -101,5 +82,20 @@ export class ReplacingValueInjector extends ValueInjector {
                 this.logger.debug('replaceAllIn() <-- ');
                 return structuredDocument;
             });
+    }
+
+    private replaceForOne(value:string, key:string, match:string, structuredDocument:StructuredDocument):Promise<boolean>{
+        return this.getValueSource(match)
+          .then( (valueSource: ValueSource | undefined) => valueSource ? valueSource.getValue(match) : undefined )
+          .then( (resolvedValue: string | undefined ) => {
+              if( !resolvedValue ) {
+                  this.logger.debug(`No value found for ${match}`);
+                  return false;
+              } else {
+                  this.logger.info(`Replacing "${value}" with "${resolvedValue}" on "${key}".`);
+                  structuredDocument.updateValue(key,resolvedValue);
+                  return true;
+              }
+          })
     }
 }

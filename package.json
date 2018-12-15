@@ -1,10 +1,10 @@
 {
-  "name": "structured-doc-vars",
+  "name": "configur8",
   "version": "1.0.0",
   "description": "Inject values into your structured text doc from remote or CLI sources.",
   "main": "dist/index.js",
   "bin": {
-    "doc-vars": "bin/index"
+    "cf8": "bin/index"
   },
   "scripts": {
     "build": "tsc",

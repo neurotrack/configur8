@@ -24,7 +24,7 @@ For example `(cli:FOO_TOO) Or Some Other Default`, where FOO_TOO = Genius will r
 *  Update readme to have a cleaner organization around possible value sources.
 * ADD xml support?
 * What other structured document types?
-* 
+* Azure Key Vault
 
 # AWS Permissions
 

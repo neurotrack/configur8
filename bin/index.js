@@ -1,4 +1,4 @@
-// #!/usr/bin/env node
+#!/usr/bin/env node
 
 const path          = require('path');
 const fs            = require('fs');
@@ -24,76 +24,87 @@ const coerceToFile = (filePath) => {
     }
 }
 
-logger.info('Analyzing command line arguments.');
+logger.info('Analyzing command line arguments...');
 
-/* Takes ownership of the dirtywork on the command parameters. */
-program
-  .version(packageConfig.version)
-  .description(packageConfig.description)
-  .command('replace <file>')
-  .option('--debug', 'Enables detailed logging when specified.')
-  .on('option:debug', () => {
-    logger.setLevel('DEBUG');
-    logger.info('Debug level logging enabled.');
-  })
-  .option('--in-format <value>', 'The format of the file being read. Defaults to JSON.')
-  .on('option:in-format', (value) => {
-      switch (value.toUpperCase()) {
-          case 'YAML':
-              valueLookup.setInputFormat('YAML');
-              break;
+try {
+    /* Takes ownership of the dirtywork on the command parameters. */
+    program
+        .version(packageConfig.version)
+        .description(packageConfig.description)
+        .command('replace <file>')
+        .option('--debug', 'Enables detailed logging when specified.')
+        .on('option:debug', () => {
+            logger.setLevel('DEBUG');
+            logger.info('Debug level logging enabled.');
+        })
+        .option('--in-format <value>', 'The format of the file being read. Defaults to JSON.')
+        .on('option:in-format', (value) => {
+            switch (value.toUpperCase()) {
+                case 'YAML':
+                    valueLookup.setInputFormat('YAML');
+                    break;
 
-          case 'JSON':
-          default:
-              valueLookup.setInputFormat('JSON');
-              break;
-      } 
-  })
-  .option('--out <value>', '(required) The file to write out, after variables have been replaced and secrets resolved.')
-  .on('option:out', (value) => outputFile = value)
-  .option('--out-format <value>', 'The format of the file being read. Defaults to JSON.')
-  .on('option:out-format', (value) => {
-      switch (value.toUpperCase()) {
-          case 'YAML':
-              valueLookup.setOutputFormat('YAML');
-              break;
+                case 'JSON':
+                default:
+                    valueLookup.setInputFormat('JSON');
+                    break;
+            } 
+        })
+        .option('--out <value>', '(required) The file to write out, after variables have been replaced and secrets resolved.')
+        .on('option:out', (value) => outputFile = value)
+        .option('--out-format <value>', 'The format of the file being read. Defaults to JSON.')
+        .on('option:out-format', (value) => {
+            switch (value.toUpperCase()) {
+                case 'YAML':
+                    valueLookup.setOutputFormat('YAML');
+                    break;
 
-          case 'JSON':        
-          default:
-              valueLookup.setOutputFormat('JSON');
-              break;
-      } 
-  })
-  .option('--args <values...>','Pass your own cli arguments for varaible replacment within the specified file. Each value must be separated by a comma and in a key=value format.  Alternatively AWS_PROFILE can be set as an environment variable.')
-  .option('--aws-region <value>', 'The region to locate AWS resources within, such as secrets or parametrs. Alternatively AWS_REGION or AWS_DEFAULT_REGION can be set as environment variables.')
-  .on('option:aws-region', region => {
-      process.env['AWS_REGION'] = region;
-      logger.info(`Setting AWS_REGION to "${region}"`);
-  })
-  .option('--aws-profile <value>', 'The profile to use when accessing AWS resources.')
-  .on('option:aws-profile', profile => {
-      process.env['AWS_PROFILE'] = profile;
-      logger.info(`Setting AWS_PROFILE to "${profile}"`);
-  })
-  .on('--help', () => {
-    console.log('')
-    console.log('Examples:');
-    console.log(`  $ ${rootCommand} replace ./config.yaml --in-format YAML --out ./config.out.yaml --out-format YAML -`);
-    console.log(`  $ ${rootCommand} replace ./config.json --aws-region us-east-1 --aws-profile my-aws-profile --out ./config.out.yaml --out-format YAML`);
-    console.log(`  $ ${rootCommand} replace ./config.json --out ./config.out.json --args ARG_NAME=Hello,ANOTHER_ARG="This one is a big longer"`);
-    console.log('')
-    console.log('')
-  })
-  .action( (file, cmd) => {
-      if(!cmd.out) logger.error('--out is a required option','ERROR');
-      else {
-        valueLookup.execute(coerceToFile(file))
-          .then( buffer => {
-            const outputPath = cmd.out.startsWith('.') ? path.join('.', cmd.out) : cmd.out;
-            fs.writeFileSync(outputPath,buffer);
-          })
-          .catch( (error) => console.error(error.message,error) );
-    }
-  })
+                case 'JSON':        
+                default:
+                    valueLookup.setOutputFormat('JSON');
+                    break;
+            } 
+        })
+        .option('--args <values...>','Pass your own cli arguments for varaible replacment within the specified file. Each value must be separated by a comma and in a key=value format.  Alternatively AWS_PROFILE can be set as an environment variable.')
+        .option('--aws-region <value>', 'The region to locate AWS resources within, such as secrets or parametrs. Alternatively AWS_REGION or AWS_DEFAULT_REGION can be set as environment variables.')
+        .on('option:aws-region', region => {
+            process.env['AWS_REGION'] = region;
+            logger.info(`Setting AWS_REGION to "${region}"`);
+        })
+        .option('--aws-profile <value>', 'The profile to use when accessing AWS resources.')
+        .on('option:aws-profile', profile => {
+            process.env['AWS_PROFILE'] = profile;
+            logger.info(`Setting AWS_PROFILE to "${profile}"`);
+        })
+        .on('--help', () => {
+            console.log('')
+            console.log('Examples:');
+            console.log(`  $ ${rootCommand} replace ./config.yaml --in-format YAML --out ./config.out.yaml --out-format YAML -`);
+            console.log(`  $ ${rootCommand} replace ./config.json --aws-region us-east-1 --aws-profile my-aws-profile --out ./config.out.yaml --out-format YAML`);
+            console.log(`  $ ${rootCommand} replace ./config.json --out ./config.out.json --args ARG_NAME=Hello,ANOTHER_ARG="This one is a big longer"`);
+            console.log('')
+            console.log('')
+        })
+        .action( (file, cmd) => {
+            if(!cmd.out) logger.error('--out is a required option','ERROR');
+            else {
+                logger.info('Analyzed.');
+                valueLookup.execute(coerceToFile(file))
+                .then( buffer => {
+                    const outputPath = cmd.out.startsWith('.') ? path.join('.', cmd.out) : cmd.out;
+                    fs.writeFileSync(outputPath,buffer);
+                })
+                .catch( (error) => console.error(error.message,error) );
+            }
+        });
 
-program.parse(process.argv);
+    program
+        .command('*')
+        .action((env) => {
+            logger.info('No command was specified. Please use --help for a list of commands.');
+        });
+
+    program.parse(process.argv);
+} catch(error) {
+    logger.error("Failed to execute.",error);
+}

@@ -1,7 +1,7 @@
-import { InlineValueInjector } from "./inline-value-injector";
-import { ValueSource, ValueSourceService } from "../value-sources/value-source-service";
-import { ValueInjector } from "./value-injector";
-import { Logger } from "../lib/logger";
+import { InlineValueInjector }    from "./inline-value-injector";
+import { ValueSourceService }     from "../value-sources/value-source-service";
+import { ValueInjector }          from "./value-injector";
+import { Logger }                 from "../lib/logger";
 import { ReplacingValueInjector } from "./replacement-value-injector";
 
 /**

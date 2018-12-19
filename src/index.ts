@@ -7,7 +7,7 @@ import {
   StructuredDocumentFactory }        from './structured-document/structured-document';
 import { ValueInjector }             from './value-injector/value-injector';
 import { ValueInjectorArrayBuilder } from './value-injector/value-injector-array-builder';
-import { Logger, LogLevel, diagnosticDump } from './lib/logger';
+import { Logger }                    from './lib/logger';
 
 /**
  * Entrypoint object into variable lookup and replacement behavior.
@@ -74,6 +74,9 @@ export class ValueLookup {
 
         for( const valueInjector of valueInjectors) {
             promise = promise.then( (structuredDocument:StructuredDocument) => {
+                this.logger.debug('execute() ---->');
+                this.logger.debug(structuredDocument.getFinal(FileFormat.JSON).toString());
+                this.logger.debug('execute() <----');
                 return valueInjector.replaceAllIn(structuredDocument) 
             });
         }

@@ -4,6 +4,7 @@ import { GetSecretValueResponse }   from 'aws-sdk/clients/secretsmanager';
 import { AWSFacade }                from '../lib/aws';
 import { ValueSource }              from './value-source-service';
 import { Logger }                   from '../lib/logger';
+import { ValueRN }                  from '../value-injector/value-injector';
 
 
 /**
@@ -39,14 +40,16 @@ export default class AWSSecretManagerValueSource implements ValueSource {
    */
   public getValue(nameARN:string):Promise<string>{
 
-    this.logger.debug(`getValue() --> ${nameARN}`);
+    this.logger.debug(`getValue(${nameARN}) -->`);
 
-    const valueARN:SecretValueARN = new SecretValueARN(nameARN);
-    const bundle:SecretBundle     = this.getSecretsBundle(valueARN.bundleName);
-    
-    return bundle.getValue(valueARN.valueName)
+    const valueARN:ValueRN    = new ValueRN(nameARN);
+    const bundle:SecretBundle = this.getSecretsBundle(valueARN.valueName);
+
+    if(!valueARN.subValueName) throw `The secret mapping for ${valueARN.prefix}:${valueARN.getValuePattern()} is missing the final value, separated by a :, to choose which secret value to return from the bundle.`;
+
+    return bundle.getValue(valueARN.subValueName)
       .then( (value:string) => {
-        this.logger.debug(`getValue() <-- ${nameARN} = ${value}`);
+        this.logger.debug(`getValue(${nameARN}) <-- ==== ${value}`);
         return value;
       })
   }
@@ -69,24 +72,6 @@ export default class AWSSecretManagerValueSource implements ValueSource {
 } 
 
 /**
- * Wrapper around the secret ARN provided when retrieving the secret.
- */
-class SecretValueARN {
-
-  public type:string;
-  public bundleName:string;
-  public valueName:string;
-
-  constructor(arn:string) {
-    const parts:string[] = arn.split(':');
-
-    this.type       = parts[0];
-    this.bundleName = parts[1];
-    this.valueName  = parts[2];
-  }
-}
-
-/**
  * Wraps around a specific collection of secrets.
  */
 class SecretBundle {
@@ -100,21 +85,25 @@ class SecretBundle {
     this.logger     = parentLogger.child(`SecretBundle[${this.bundleName}]`);
     this.secrets    = secretsManager
       .getSecretValue({
-        SecretId: bundleName
+          SecretId: bundleName
       })
       .promise()
       .then( (response:PromiseResult<GetSecretValueResponse, AWSError>) => {
-        if (response instanceof Error) {
-          this.logger.error(`\n\n\nProblem getting bundle ${this.bundleName}\n\n\n`)
-          throw response;
-        }
-        const secretString:string | undefined = (<GetSecretValueResponse>response).SecretString;
-        this.logger.debug(`The secret bundle was loaded, ${secretString}`);
-        try{
-          return secretString ? JSON.parse(secretString) : null;
-        } catch(error) {
-          return Promise.reject(`The secret bundle ${this.bundleName} is not in a JSON form, or has invalid JSON and could not be parsed.`);
-        }
+          if (response instanceof Error) {
+              this.logger.error(`\n\n\nProblem getting bundle ${this.bundleName}\n\n\n`)
+              throw response;
+          }
+          const secretString:string | undefined = (<GetSecretValueResponse>response).SecretString;
+          this.logger.debug(`The secret bundle was loaded, ${secretString}`);
+          try{
+              return secretString ? JSON.parse(secretString) : null;
+          } catch(error) {
+              return Promise.reject(`The secret bundle ${this.bundleName} is not in a JSON form, or has invalid JSON and could not be parsed.`);
+          }
+      })
+      .catch( (error) => {
+        this.logger.error(`\n\n\nProblem getting bundle ${this.bundleName}\n\n\n`)
+        return Promise.reject(error);
       })
   }
 
@@ -123,10 +112,10 @@ class SecretBundle {
    * @param name of the value within the secret bundle to return.
    */
   public getValue(valueName:string):Promise<string> {
-      this.logger.debug('getValue() -->');
+      this.logger.debug(`getValue(${valueName}) -->`);
       return this.secrets
           .then( (secrets:any) => {
-            this.logger.debug(`getValue() <-- ${JSON.stringify(secrets)}`);
+            this.logger.debug(`getValue(${valueName}) <-- ${JSON.stringify(secrets)}`);
             return secrets[valueName];
           })
   }

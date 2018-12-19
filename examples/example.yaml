@@ -2,9 +2,10 @@ top:
     label: Hello (cli:STAGE)
     environment: cli:STAGE
     secret: aws-secretsmanager:/(cli:STAGE)/auth0:FOO
-    clientId: aws-parameterstore:/(cli:STAGE)/pstest/CLIENT
+    # clientId: aws-parameterstore:/(cli:STAGE)/pstest/CLIENT
     arrayValues:
-        - aws-parameterstore:/(cli:STAGE)/pstest/secret
+        # - aws-parameterstore:/(cli:STAGE)/pstest/secret
         - cli:STAGE
-        # - aws-secretsmanager:/(cli:STAGE)/auth0:NOT_THERE
+        - aws-secretsmanager:/(cli:STAGE)/auth0:NOT_THERE
+    array2: aws-secretsmanager:/(cli:STAGE)/auth0:array@
   

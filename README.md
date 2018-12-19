@@ -9,6 +9,8 @@ Below is a list of prefixes you can use to indicate the location of the value to
 * `aws-secretmanager:/path/to/secret:VALUE_IN_SECRETS` This will lookup a secret bundle called `/path/to/secret` and within that bundle, it will look for a value called `VALUE_IN_SECRETS`. Currently this value must be a string.
 * `aws-parameterstore:/path/to/parameter` This will lookup a parameters called `/path/to/parameter` in AWS Parameter Storer. Currently this value must be a string.
 
+## String Array
+Its possible to format your value as a list of string values separated by a comma. If so, you can end your varaiable pattern with an @ symbol to tell configur8 to insert a list of string's instead of a single string value.
 
 # Inline Replacement
 In all cases where parenthesis are omitted, the value foudn will replace the value the value lookup is within. If you specify braces around the value lookup pattern, then only that section is replaced.

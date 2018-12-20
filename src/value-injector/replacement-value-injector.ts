@@ -37,6 +37,7 @@ export class ReplacingValueInjector extends ValueInjector {
 
         const flattened: Map<string,any> = structuredDocument.getFlattened();
         const promises: Promise<void>[]  = Array.from(flattened.keys())
+            .filter( (key: string) => typeof(flattened.get(key)) === 'string' )
             .map( (key:string) => {
                 const value:string       = flattened.get(key);
                 return {

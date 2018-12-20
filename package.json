@@ -1,6 +1,6 @@
 {
   "name": "configur8",
-  "version": "1.0.18",
+  "version": "1.0.24",
   "description": "Inject values into your structured text doc from remote or CLI sources.",
   "main": "dist/index.js",
   "bin": {

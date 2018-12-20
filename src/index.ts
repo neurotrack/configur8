@@ -61,12 +61,7 @@ export class ValueLookup {
         let   promise :Promise<StructuredDocument>   = Promise.resolve(structuredDocument);
 
         for( const valueInjector of valueInjectors) {
-            promise = promise.then( (structuredDocument:StructuredDocument) => {
-                this.logger.debug('execute() ---->');
-                this.logger.debug(structuredDocument.getFinal(FileFormat.JSON).toString());
-                this.logger.debug('execute() <----');
-                return valueInjector.replaceAllIn(structuredDocument) 
-            });
+            promise = promise.then( (structuredDocument:StructuredDocument) => valueInjector.replaceAllIn(structuredDocument) );
         }
 
         return promise

@@ -1,3 +1,5 @@
+import { AnyLengthString } from "aws-sdk/clients/comprehend";
+
 export class Utils {
 
     /**
@@ -61,7 +63,16 @@ export class Utils {
             [],
             (toIterate: any, prefix: string[], key: string, value: any) => {
                 if (Array.isArray(value)) {
-                    value.forEach((item: string, index: number) => values[prefix.concat([key], ['' + index]).join('.')] = item);
+                    value.forEach((item: string | any, index: number) => {
+                        if( typeof item === 'string') {
+                            values[prefix.concat([key], ['' + index]).join('.')] = item;
+                        } else {
+                            const arrayItems:any = Utils.flatten(item);
+                            for( let arrayItemsKey of Object.keys(arrayItems) ) {
+                                values[prefix.concat([key], ['' + index],arrayItemsKey).join('.')] = arrayItems[arrayItemsKey];
+                            }
+                        }
+                    });
                 } else {
                     values[prefix.concat([key]).join('.')] = value;
                 }

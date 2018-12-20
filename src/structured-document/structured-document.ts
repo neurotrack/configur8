@@ -63,6 +63,7 @@ export class StructuredDocumentFactory {
  */
 export class StructuredDocument {
 
+    private static PRIORITY_KEYS:string[] = ['name','label','title'];
     private original: any;
     private originalFileFormat: FileFormat;
     private finalized: DocumentObject;
@@ -137,12 +138,16 @@ export class StructuredDocument {
         const fileFormat: FileFormat = _fileFormat || this.getOriginalFileFormat();
         switch (fileFormat) {
             case FileFormat.YAML:
-                console.log("To write as yaml",JSON.stringify(this.finalized,null,4))
                 return Buffer.from( yamlJS.dump(this.finalized, {
                     indent: 4,
                     lineWidth: 120,
-                    noRefs: true
-                }) )
+                    noRefs: true,
+                    sortKeys: (first: any, second: any) => {
+                        if(StructuredDocument.PRIORITY_KEYS.indexOf(first)) return 1;
+                        if(StructuredDocument.PRIORITY_KEYS.indexOf(second)) return -1;
+                        return second.localeCompare(first);
+                    }
+                }));
         
             case FileFormat.JSON:
             default:

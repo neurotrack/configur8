@@ -39,7 +39,7 @@ export default class AWSParameterStoreValueSource implements ValueSource {
    */
   public getValue(nameARN:string):Promise<string | undefined> {
 
-    this.logger.debug(`getValue() --> ${nameARN}`);
+    this.logger.debug('getValue() --> ',{nameARN});
 
     const parameterPath: string     = nameARN.split(':')[1];
     const value: string | undefined = this.parameterCache.get(parameterPath);
@@ -59,11 +59,11 @@ export default class AWSParameterStoreValueSource implements ValueSource {
         const parameter: Parameter | undefined = (<GetParameterResult>response).Parameter;
         
         if(!parameter) {
-          this.logger.debug(`getValue() <-- ${nameARN} No values in parameter ${JSON.stringify(parameter)}`);
+          this.logger.debug(`getValue() <-- ${nameARN} No values in parameter`, parameter);
           return undefined;
         }
 
-        this.logger.debug(`getValue() <-- ${nameARN} = ${parameter.Value}`);
+        this.logger.debug(`getValue() <-- ${nameARN}`,{'parameter.Value':parameter.Value});
 
         return parameter.Value;
 

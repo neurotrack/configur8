@@ -94,7 +94,7 @@ class SecretBundle {
               throw response;
           }
           const secretString:string | undefined = (<GetSecretValueResponse>response).SecretString;
-          this.logger.debug(`The secret bundle was loaded, ${secretString}`);
+          this.logger.debug('The secret bundle was loaded',{secretString});
           try{
               return secretString ? JSON.parse(secretString) : null;
           } catch(error) {
@@ -102,7 +102,7 @@ class SecretBundle {
           }
       })
       .catch( (error) => {
-        this.logger.error(`\n\n\nProblem getting bundle ${this.bundleName}\n\n\n`)
+        this.logger.error(`Problem getting bundle ${this.bundleName}`,error);
         return Promise.reject(error);
       })
   }
@@ -115,7 +115,7 @@ class SecretBundle {
       this.logger.debug(`getValue(${valueName}) -->`);
       return this.secrets
           .then( (secrets:any) => {
-            this.logger.debug(`getValue(${valueName}) <-- ${JSON.stringify(secrets)}`);
+            this.logger.debug(`getValue(${valueName}) <--`, secrets);
             return secrets[valueName];
           })
   }

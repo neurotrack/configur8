@@ -50,15 +50,13 @@ export class InlineValueInjector extends ValueInjector {
             }) 
             .filter( (tuple: any) => tuple['matches'] )
             .map( (tuple: any) => {
-                
-                this.logger.debug(`replaceAllIn() -- ${JSON.stringify(tuple)}`);
 
                 const key: string                 = tuple['key'];
                 const matches: RegExpMatchArray   = tuple['matches'];
                 let   value: string               = tuple['value'];
                 let   promiseChain:Promise<void>  = Promise.resolve();
 
-                this.logger.debug({tuple,matches});
+                this.logger.debug('replaceAllIn() -- tuple', {tuple,matches});
 
                 if(!matches) return Promise.resolve();
 

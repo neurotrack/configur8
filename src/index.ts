@@ -1,5 +1,3 @@
-
-
 import { ValueSourceService }        from './value-sources/value-source-service';
 import { 
   StructuredDocument, 
@@ -35,13 +33,8 @@ export class ValueLookup {
      * 
      * @param outputFormat to return the document in.
      */
-    public setOutputFormat(outputFormat: FileFormat | string) {
-        if(typeof(outputFormat)==='string') {
-            const key = outputFormat as keyof typeof FileFormat;
-            this.outputFormat = FileFormat[key];
-        } else {
-            this.outputFormat = outputFormat;
-        }
+    public setOutputFormat(outputFormat: FileFormat) {
+        this.outputFormat = outputFormat;
         return this;
     }
 
@@ -49,13 +42,8 @@ export class ValueLookup {
      * 
      * @param inputFormat to parse the document as.
      */
-    public setInputFormat(inputFormat: FileFormat | string) {
-        if(typeof(inputFormat)==='string') {
-            const key = inputFormat as keyof typeof FileFormat;
-            this.inputFormat = FileFormat[key];
-        } else {
-          this.inputFormat = inputFormat;
-        }
+    public setInputFormat(inputFormat: FileFormat) {
+        this.inputFormat = inputFormat;
         return this;
     }
 

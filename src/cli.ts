@@ -1,21 +1,22 @@
 #!/usr/bin/env node
 
-const path          = require('path');
-const fs            = require('fs');
-const program       = require('commander');
-const logging       = require('../src/lib/logger');
-const DocReplace    = require('../src/index');
+import * as path            from 'path';
+import * as fs              from'fs';
+import * as program         from 'commander';
+import { Logger, LogLevel } from './lib/logger';
+import { ValueLookup }      from './index';
+import { FileFormat } from './structured-document/structured-document';
 
 /* Lookup the package.json file to make use of its values */
 const root          = path.resolve(__dirname, ".", "..");
 const fileContents  = fs.readFileSync(root + '/package.json');
 const packageConfig = JSON.parse(fileContents.toString('utf8'));
 const rootCommand   = Object.keys(packageConfig.bin)[0];
-const logger        = new logging.Logger();
-const valueLookup   = new DocReplace.ValueLookup(logger);
+const logger        = new Logger(rootCommand, process.argv.indexOf('--debug')!==-1 ? LogLevel.DEBUG : LogLevel.INFO);
+const valueLookup   = new ValueLookup(logger);
 
 /* Used to coerce file names provided to the buffer that represents the file. */
-const coerceToFile = (filePath) => {
+const coerceToFile = (filePath:string) => {
     const resolvedFilePath = filePath.startsWith('.') ? path.join('.', filePath) : filePath;
     if(fs.existsSync(resolvedFilePath)){
         return fs.readFileSync(resolvedFilePath);
@@ -34,47 +35,35 @@ try {
         .command('replace <file>')
         .option('--debug', 'Enables detailed logging when specified.')
         .on('option:debug', () => {
-            logger.setLevel('DEBUG');
+            logger.setLevel(LogLevel.DEBUG);
             logger.info('Debug level logging enabled.');
+            logger.info('Args',process.argv)
         })
         .option('--in-format <value>', 'The format of the file being read. Defaults to JSON.')
-        .on('option:in-format', (value) => {
-            switch (value.toUpperCase()) {
-                case 'YAML':
-                    valueLookup.setInputFormat('YAML');
-                    break;
-
-                case 'JSON':
-                default:
-                    valueLookup.setInputFormat('JSON');
-                    break;
-            } 
+        .on('option:in-format', (value: string) => {
+            const key = value.toUpperCase() as keyof typeof FileFormat;
+            valueLookup.setInputFormat(FileFormat[key]);
+            logger.debug('Set in format to',{fileFormat:FileFormat[key]});
         })
         .option('--out <value>', '(required) The file to write out, after variables have been replaced and secrets resolved.')
-        .on('option:out', (value) => outputFile = value)
         .option('--out-format <value>', 'The format of the file being read. Defaults to JSON.')
-        .on('option:out-format', (value) => {
-            switch (value.toUpperCase()) {
-                case 'YAML':
-                    valueLookup.setOutputFormat('YAML');
-                    break;
-
-                case 'JSON':        
-                default:
-                    valueLookup.setOutputFormat('JSON');
-                    break;
-            } 
+        .on('option:out-format', (value: string) => {
+            const key = value.toUpperCase() as keyof typeof FileFormat;
+            valueLookup.setOutputFormat(FileFormat[key]);
+            logger.debug('Set out format to',{fileFormat:FileFormat[key]});
         })
         .option('--args <values...>','Pass your own cli arguments for varaible replacment within the specified file. Each value must be separated by a comma and in a key=value format.  Alternatively AWS_PROFILE can be set as an environment variable.')
         .option('--aws-region <value>', 'The region to locate AWS resources within, such as secrets or parametrs. Alternatively AWS_REGION or AWS_DEFAULT_REGION can be set as environment variables.')
         .on('option:aws-region', region => {
             process.env['AWS_REGION'] = region;
             logger.info(`Setting AWS_REGION to "${region}"`);
+            logger.debug('Set AWS_REGION format to',{region});
         })
         .option('--aws-profile <value>', 'The profile to use when accessing AWS resources.')
         .on('option:aws-profile', profile => {
             process.env['AWS_PROFILE'] = profile;
             logger.info(`Setting AWS_PROFILE to "${profile}"`);
+            logger.debug('Set AWS_PROFILE format to',{profile});
         })
         .on('--help', () => {
             console.log('')
@@ -86,7 +75,7 @@ try {
             console.log('')
         })
         .action( (file, cmd) => {
-            if(!cmd.out) logger.error('--out is a required option','ERROR');
+            if(!cmd.out) logger.error('--out is a required option');
             else {
                 logger.info('Analyzed.');
                 valueLookup.execute(coerceToFile(file))

@@ -24,7 +24,7 @@ export class ValueInjectorArrayBuilder {
             ]
             .sort( (first:ValueInjector, second:ValueInjector) => first.getPriority() - second.getPriority() )
             .map( (valueInjector:ValueInjector) => {
-                ValueInjectorArrayBuilder.LOGGER.debug(`build() <-- ${valueInjector.getPriority()}`);
+                ValueInjectorArrayBuilder.LOGGER.debug('build() <--',{priority:valueInjector.getPriority()});
                 return valueInjector;
             });
     }

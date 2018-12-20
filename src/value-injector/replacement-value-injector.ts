@@ -48,7 +48,7 @@ export class ReplacingValueInjector extends ValueInjector {
             .filter( (tuple: any) => tuple['matches'] )
             .map( (tuple: any) => {
 
-                this.logger.debug(`replaceAllIn() -- ${JSON.stringify(tuple)}`);
+                this.logger.debug('replaceAllIn() -- tuple',tuple);
 
                 const valueRN: ValueRN            = new ValueRN(tuple['value']);
                 const key: string                 = tuple['key'];

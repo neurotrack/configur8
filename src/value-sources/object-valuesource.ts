@@ -33,12 +33,12 @@ export default class ObjectValueSource implements ValueSource {
 
   public getValue(nameRN:string):Promise<string | undefined> {
 
-    this.logger.debug(`getValue() --> ${nameRN}`);
+    this.logger.debug('getValue() -->', {nameRN});
 
     const name:string              = (nameRN.indexOf(':') !== -1 ? nameRN.split(':')[1] : nameRN).toUpperCase();
     const value:string | undefined = this.source[name];
 
-    this.logger.debug(`getValue() <-- ${nameRN} = ${value}`);
+    this.logger.debug('getValue() <-- ', {nameRN,value});
 
     return Promise.resolve(value);
   }

@@ -1,10 +1,10 @@
 {
   "name": "configur8",
-  "version": "1.0.0",
+  "version": "1.0.18",
   "description": "Inject values into your structured text doc from remote or CLI sources.",
   "main": "dist/index.js",
   "bin": {
-    "cf8": "bin/index"
+    "cf8": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -13,8 +13,7 @@
     "postversion": "git push && git push --tags"
   },
   "files": [
-    "dist/**/*",
-    "bin/index"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -37,14 +36,13 @@
   ],
   "homepage": "https://github.com/matt-filion/structured-doc-vars#readme",
   "devDependencies": {
+    "@types/js-yaml": "^3.11.2",
     "@types/node": "^10.12.12",
     "typescript": "^3.2.1"
   },
   "dependencies": {
-    "@types/js-yaml": "^3.11.2",
     "aws-sdk": "^2.371.0",
     "commander": "^2.19.0",
-    "js-yaml": "^3.12.0",
-    "yaml-js": "^0.2.3"
+    "js-yaml": "^3.12.0"
   }
 }

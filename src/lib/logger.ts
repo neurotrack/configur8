@@ -22,25 +22,30 @@ export let logLevel:LogLevel = LogLevel.INFO;
  * @param {string} message 
  * @param {string} level 
  */
-export const log = (message:string | object, level?:LogLevel, prefix?:string,) => {
+export const log = (message:string, level?:LogLevel, prefix?:string, context?:object) => {
 
-    const timestamp: number = Date.now();
-    const output: string    = typeof(message) === 'string' ? message : JSON.stringify(message, (key, value) => {
+    const timestamp: number   = Date.now();
+    const output: string      = typeof(message) === 'string' ? message : JSON.stringify(message, (key, value) => {
         if( key == 'parent') { return '[object]';}
         else {return value;}
     },4);
     const thisLevel: LogLevel = level || LogLevel.INFO;
-    const subject:string      = LogLevel.DEBUG === thisLevel ? prefix || rootCommand : rootCommand;
+    const subject:string      =  prefix || rootCommand;
 
-    if(LogLevel.ERROR !== level) console.log(`${timestamp} -- [${thisLevel}] ${subject} ${output}`);
-    else console.error(`${timestamp} -- [ERROR] ${subject} ${output}`);
+    if(LogLevel.ERROR !== level) {
+        if(context) console.log(`${timestamp} -- [${thisLevel}] ${subject} ${output}`,context);
+        else console.log(`${timestamp} -- [${thisLevel}] ${subject} ${output}`);
+    } else {
+        if(context) console.error(`${timestamp} -- [ERROR] ${subject} ${output}`,context);
+        else console.error(`${timestamp} -- [ERROR] ${subject} ${output}`);
+    }
 }
 
 /**
  * Helper function to dump a bunch of diagnostic details to the 
  * console to help diagnose runtime issues.
  */
-export const diagnosticDump = () => log({
+export const diagnosticDump = () => log('Diagnostics!',LogLevel.INFO,'diagnostics',{
     platform: process.platform,
     architecture: process.arch,
     processId: process.pid,
@@ -66,16 +71,16 @@ export class Logger {
         this.children = [];
     }
 
-    public debug(message:string | object):void {
-        if(LogLevel.DEBUG === this.level) log(message, LogLevel.DEBUG, this.prefix.join('.'));
+    public debug(message:string, context?:object):void {
+        if(LogLevel.DEBUG === this.level) log(message, LogLevel.DEBUG, this.prefix.join('.'), context);
     }
 
-    public info(message:string | object):void {
-        if(LogLevel.INFO >= this.level) log(message, LogLevel.INFO, this.prefix.join('.'));
+    public info(message:string, context?:object):void {
+        if(LogLevel.INFO >= this.level) log(message, LogLevel.INFO, this.prefix.join('.'), context);
     }
 
-    public error(message:string | object):void {
-        log(message, LogLevel.ERROR, this.prefix.join('.'));
+    public error(message:string, context?:object):void {
+        log(message, LogLevel.ERROR, this.prefix.join('.'), context);
     }
 
     public child(name:string):Logger {

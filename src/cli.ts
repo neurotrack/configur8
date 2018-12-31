@@ -77,6 +77,22 @@ try {
         .action( (file, cmd) => {
             if(!cmd.out) logger.error('--out is a required option');
             else {
+
+                /**
+                 * Try and assume an output format from the output file name.
+                 */
+                if(!cmd.outFormat) {
+                  const fileName:string = cmd.out.substring(cmd.out.lastIndexOf('.')+1);
+                  const key             = fileName.toUpperCase() as keyof typeof FileFormat;
+                  valueLookup.setOutputFormat(FileFormat[key]);
+                }
+
+                if(!cmd.inFormat) {
+                  const fileName:string = file.substring(file.lastIndexOf('.')+1);
+                  const key             = fileName.toUpperCase() as keyof typeof FileFormat;
+                  valueLookup.setInputFormat(FileFormat[key]);
+                }
+
                 logger.info('Analyzed.');
                 valueLookup.execute(coerceToFile(file))
                 .then( buffer => {

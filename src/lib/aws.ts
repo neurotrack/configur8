@@ -1,6 +1,5 @@
 import * as AWS        from 'aws-sdk';
 import { Credentials } from 'aws-sdk';
-import { access } from 'fs';
 
 /**
  * Wrapper around the high level AWS needs like creating credentials or

@@ -26,9 +26,14 @@ export class ValueRN {
             this.subValueName = parts.shift();
         }
 
-        if(!!this.subValueName && this.subValueName.indexOf('@') !== -1) {
-            this.subValueName = this.subValueName.replace('@','');
+        if(!!this.valueName && this.valueName.indexOf('@') !== -1) {
+            this.valueName = this.valueName.replace('@','');
             this.structure    = ValueStructure.ARRAY;
+        }
+
+        if(!!this.subValueName && this.subValueName.indexOf('@') !== -1) {
+          this.subValueName = this.subValueName.replace('@','');
+          this.structure    = ValueStructure.ARRAY;
         }
     }
 

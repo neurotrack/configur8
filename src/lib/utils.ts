@@ -1,5 +1,3 @@
-import { AnyLengthString } from "aws-sdk/clients/comprehend";
-
 export class Utils {
 
     /**

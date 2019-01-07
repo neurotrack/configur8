@@ -45,7 +45,7 @@ export class ValueSourceService{
         return this.getValueSources()
             .then( (valueSources:ValueSource[]) => {
                 const valueSource:ValueSource | undefined = valueSources.find( (value:ValueSource) => value.getPrefix() === prefix );
-                if(!valueSource) this.logger.info(`No source could be found with the prefix "${prefix}:".`);
+                if(!valueSource) this.logger.debug(`No source could be found with the prefix "${prefix}:".`);
                 return Promise.resolve(valueSource);
             });
     }

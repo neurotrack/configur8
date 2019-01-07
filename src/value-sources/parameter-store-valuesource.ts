@@ -4,6 +4,7 @@ import { GetParameterResult, Parameter } from 'aws-sdk/clients/ssm';
 import { AWSFacade }                     from '../lib/aws';
 import { ValueSource }                   from './value-source-service';
 import { Logger }                        from '../lib/logger';
+import { ValueRN } from '../value-injector/value-injector';
 
 
 /**
@@ -41,33 +42,45 @@ export default class AWSParameterStoreValueSource implements ValueSource {
 
     this.logger.debug('getValue() --> ',{nameARN});
 
-    const parameterPath: string     = nameARN.split(':')[1];
-    const value: string | undefined = this.parameterCache.get(parameterPath);
+    const valueARN:ValueRN          = new ValueRN(nameARN);
+    const value: string | undefined = this.parameterCache.get(valueARN.valueName);
+
+    this.logger.debug('getValue() valueARN',{valueARN});
 
     if(value) return Promise.resolve(value);
 
-    return this.ssm
-      .getParameter({
-        Name: parameterPath,
-        WithDecryption: true
-      })
-      .promise()
-      .then( (response:PromiseResult<GetParameterResult, AWSError>) => {
+    try{
 
-        if (response instanceof Error) throw response;
+      return this.ssm
+        .getParameter({
+          Name: valueARN.valueName,
+          WithDecryption: true
+        })
+        .promise()
+        .then( (response:PromiseResult<GetParameterResult, AWSError>) => {
 
-        const parameter: Parameter | undefined = (<GetParameterResult>response).Parameter;
-        
-        if(!parameter) {
-          this.logger.debug(`getValue() <-- ${nameARN} No values in parameter`, parameter);
-          return undefined;
-        }
+          if (response instanceof Error) throw response;
 
-        this.logger.debug(`getValue() <-- ${nameARN}`,{'parameter.Value':parameter.Value});
+          const parameter: Parameter | undefined = (<GetParameterResult>response).Parameter;
+          
+          if(!parameter) {
+            this.logger.debug(`getValue() <-- ${nameARN} No values in parameter`, parameter);
+            return undefined;
+          }
 
-        return parameter.Value;
+          this.logger.debug(`getValue() <-- ${nameARN}`,{'parameter.Value':parameter.Value});
 
-      })
+          return parameter.Value;
 
+        })
+        .catch( (error:any) => {
+          this.logger.error('getValue() <-- Error on',{nameARN});
+          return Promise.reject(error);
+        });
+
+    } catch(error) {
+      this.logger.error('getValue() <-- Exception on',{nameARN});
+      throw error;
+    }
   }
 } 

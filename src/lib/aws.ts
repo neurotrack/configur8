@@ -2,6 +2,8 @@ import * as AWS        from 'aws-sdk';
 import * as https      from 'https';
 import * as fs         from 'fs';
 import { Credentials } from 'aws-sdk';
+import { Logger }      from './logger';
+
 
 /**
  * Wrapper around the high level AWS needs like creating credentials or
@@ -18,6 +20,7 @@ export class AWSFacade {
     private static ALLOW_INVALID_CERTS_KEY:string = 'AWS_HTTPS_ALLOW_INVALID_CERTS';
     private static CERTS_PATH:string              = 'AWS_HTTPS_CERTS_PATH';
     private static isInitialized:boolean          = false;
+    private static logger:Logger                  = new Logger('AWSFacade')
 
     constructor(){
     }
@@ -27,6 +30,8 @@ export class AWSFacade {
      * for AWS.
      */
     public static getCredentials():Credentials {
+
+        this.init();
 
         const profile:string | undefined = process.env[this.PROFILE_KEY];
         if(!!profile) return new AWS.SharedIniFileCredentials({ profile });
@@ -46,21 +51,23 @@ export class AWSFacade {
      * Returns the currently configured region
      */
     public static getRegion(){
+      
+        this.init();
+
         return process.env[this.REGION_KEY] || process.env[this.DEFAULT_REGION_KEY];
     }
 
     private static init(){
-      /*
-       * @see https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-registering-certs.html
-       */
-      if(this.isInitialized){
+      if(!this.isInitialized){
+
+        this.logger.info('init() Not initialized -->');
 
         const rejectUnauthorized:boolean = 
-            process.env[this.ALLOW_INVALID_CERTS_KEY] === '1' 
-            ||
-            process.env[this.ALLOW_INVALID_CERTS_KEY] === 'true'
-            || 
-            false;
+            (
+              process.env[this.ALLOW_INVALID_CERTS_KEY] !== '1' 
+              &&
+              process.env[this.ALLOW_INVALID_CERTS_KEY] !== 'true'
+            );
 
         const caCertsPath:string | undefined = process.env[this.CERTS_PATH];
         let   certs:any[] | undefined        = undefined;
@@ -70,7 +77,12 @@ export class AWSFacade {
             fs.readFileSync(caCertsPath)
           ];
         }
+        
+        this.logger.info('init()',{rejectUnauthorized,certs});
 
+        /*
+        * @see https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/node-registering-certs.html
+        */
         AWS.config.update({
           httpOptions: {
             agent: new https.Agent({
@@ -79,6 +91,10 @@ export class AWSFacade {
             })
           }
         });
+
+        this.isInitialized = true;
+        
+        this.logger.info('init() <--');
       }
     }
 }

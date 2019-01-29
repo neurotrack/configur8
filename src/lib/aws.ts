@@ -29,7 +29,7 @@ export class AWSFacade {
      * Returns AWS Credentials based on the environment configurations
      * for AWS.
      */
-    public static getCredentials():Credentials {
+    public static getCredentials():Credentials | undefined {
 
         this.init();
 
@@ -44,7 +44,7 @@ export class AWSFacade {
             accessKeyId, secretAccessKey, sessionToken 
         });
 
-        throw Error('AWS Credentials are missing.');
+        return undefined;
     }
 
     /**

@@ -6,6 +6,7 @@ import {
 import { ValueInjector }             from './value-injector/value-injector';
 import { ValueInjectorArrayBuilder } from './value-injector/value-injector-array-builder';
 import { Logger }                    from './lib/logger';
+import { AWSFacade }                 from './lib/aws';
 
 /**
  * Entrypoint object into variable lookup and replacement behavior.
@@ -58,7 +59,9 @@ export class ValueLookup {
 
         const structuredDocument: StructuredDocument = StructuredDocumentFactory.build(inFile, this.inputFormat);
         const valueInjectors: ValueInjector[]        = ValueInjectorArrayBuilder.build(this.valueSourceService);
-        let   promise :Promise<StructuredDocument>   = Promise.resolve(structuredDocument);
+        let   promise :Promise<StructuredDocument>   = AWSFacade.init()
+          .then( () => structuredDocument );
+        
 
         for( const valueInjector of valueInjectors) {
             promise = promise.then( (structuredDocument:StructuredDocument) => valueInjector.replaceAllIn(structuredDocument) );

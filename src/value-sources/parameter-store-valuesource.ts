@@ -4,7 +4,7 @@ import { GetParameterResult, Parameter } from 'aws-sdk/clients/ssm';
 import { AWSFacade }                     from '../lib/aws';
 import { ValueSource }                   from './value-source-service';
 import { Logger }                        from '../lib/logger';
-import { ValueRN } from '../value-injector/value-injector';
+import { ValueRN }                       from '../value-injector/value-injector';
 
 
 /**
